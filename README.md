@@ -3,6 +3,10 @@ IRP Bot
 
 Provides capabilities to work with Cortex and Hive (tba) by using Telegram
 
+# Work in progress
+
+Project is under active development so it is not production ready yet
+
 ## Usage
 
 ```
