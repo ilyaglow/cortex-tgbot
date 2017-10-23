@@ -1,4 +1,4 @@
-package irpbot
+package irbot
 
 import (
 	"log"
@@ -31,7 +31,7 @@ func NewClient() *Client {
 	return &Client{
 		Bot:              bot,
 		Cortex:           cortex,
-		Password:         os.Getenv("IRP_BOT_PASSWORD"),
+		Password:         os.Getenv("IR_BOT_PASSWORD"),
 		AllowedUsernames: make(map[string]bool),
 	}
 }

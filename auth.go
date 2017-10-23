@@ -1,4 +1,4 @@
-package irpbot
+package irbot
 
 import (
 	"log"

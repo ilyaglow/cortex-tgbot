@@ -1,4 +1,4 @@
-package irpbot
+package irbot
 
 import (
 	"gopkg.in/telegram-bot-api.v4"
