@@ -1,4 +1,4 @@
-package irbot
+package cortexbot
 
 import (
 	"log"
@@ -10,10 +10,8 @@ import (
 
 // Client defines bot's abilities to interact with services
 type Client struct {
-	Bot    *tgbotapi.BotAPI
-	Cortex *gocortex.Client
-	// TODO: TheHive API client
-	Hive             interface{}
+	Bot              *tgbotapi.BotAPI
+	Cortex           *gocortex.Client
 	Password         string
 	AllowedUsernames map[string]bool
 }
@@ -31,7 +29,7 @@ func NewClient() *Client {
 	return &Client{
 		Bot:              bot,
 		Cortex:           cortex,
-		Password:         os.Getenv("IR_BOT_PASSWORD"),
+		Password:         os.Getenv("CORTEX_BOT_PASSWORD"),
 		AllowedUsernames: make(map[string]bool),
 	}
 }
