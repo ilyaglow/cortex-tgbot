@@ -8,14 +8,15 @@ import (
 )
 
 const (
-	// Modified version of govalidator.DNSName that does not allow domain without tld (like localhost)
-	DNSName string = `^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})+[\._]?$`
-	Hash    string = `^[a-fA-F0-9]{32,}$`
+	// dnsName is a modified version of govalidator.DNSName that does not allow domain without tld (like localhost)
+	dnsName string = `^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})+[\._]?$`
+	// hash is any string contains hex letters and longer that 32 symbols
+	hash string = `^[a-fA-F0-9]{32,}$`
 )
 
 var (
-	rxDNS  = regexp.MustCompile(DNSName)
-	rxHash = regexp.MustCompile(Hash)
+	rxDNS  = regexp.MustCompile(dnsName)
+	rxHash = regexp.MustCompile(hash)
 )
 
 // IsHash checks if a given string is a hash
