@@ -9,5 +9,9 @@ go:
   - master
 
 script:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+  - go test -v -covermode=count -coverprofile=coverage.out
+  - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
   - cd cmd/cortexbot
   - CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo
