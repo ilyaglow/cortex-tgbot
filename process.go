@@ -13,7 +13,7 @@ import (
 
 // ProcessCortex asks Cortex about data submitted by a user
 func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
-	j, err := c.constructJob(input.Text)
+	j, err := constructJob(input.Text)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -60,7 +60,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 }
 
 // constructJob make a JobBody depends on its type
-func (c *Client) constructJob(s string) (*gocortex.JobBody, error) {
+func constructJob(s string) (*gocortex.JobBody, error) {
 	var dataType string
 
 	if valid.IsIP(s) {
