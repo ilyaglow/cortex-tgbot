@@ -3,13 +3,13 @@
 Cortex bot
 ----------
 
-Simple telegram bot that provides capabilities to work with [Cortex](https://github.com/CERT-BDF/Cortex).
+Simple telegram bot to check indicators' reputation based on [Cortex](https://github.com/CERT-BDF/Cortex) [analyzers](https://github.com/CERT-BDF/Cortex-Analyzers) that can be [easily written](https://github.com/CERT-BDF/CortexDocs/blob/master/api/how-to-create-an-analyzer.md) for any third party feeds or your own API service.
 
-It uses a password to validate it's user, that probably will be changed in the future.
+It simply uses a password for authentication, which is probably will be changed in the future prior to a role based model.
 
 ## Usage
 
-Start bot from source code (you can use compiled version (linux/amd64) too):
+Start bot from the source code (you can use [compiled version](https://github.com/ilyaglow/cortex-tgbot/releases) too):
 
 ```
 CORTEX_BOT_PASSWORD=PassphraseForAuth CORTEX_LOCATION=http://127.0.0.1:9000 TGBOT_API_TOKEN=TOKEN go run cmd/cortexbot/main.go
@@ -19,7 +19,7 @@ Add bot to your contacts, enter the passphrase and here you go - submit data and
 
 ## Supported data types
 
-By now the following data types are supported:
+By now the following data types are supported for lookup:
 * Domain
 * Hash
 * IP
