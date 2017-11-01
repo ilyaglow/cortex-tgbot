@@ -1,7 +1,10 @@
 package cortexbot
 
 import (
+	"fmt"
 	"testing"
+
+	gocortex "github.com/ilyaglow/go-cortex"
 )
 
 func TestConstructJobFromIP(t *testing.T) {
@@ -62,5 +65,33 @@ func TestConstructJobFromUnknown(t *testing.T) {
 	_, err := constructJob(unknown)
 	if err == nil {
 		t.Error("Unknown data didn't trigger the error")
+	}
+}
+
+func TestBuildTaxonomies(t *testing.T) {
+	var txs []gocortex.Taxonomy
+
+	tx1 := gocortex.Taxonomy{
+		Predicate: "Predicate1",
+		Namespace: "Namespace1",
+		Value:     "Value1",
+		Level:     "safe",
+	}
+	txs = append(txs, tx1)
+
+	tx2 := gocortex.Taxonomy{
+		Predicate: "Predicate2",
+		Namespace: "Namespace2",
+		Value:     "Value2",
+		Level:     "info",
+	}
+	txs = append(txs, tx2)
+
+	expected := fmt.Sprintf("%s:%s = %s, %s:%s = %s",
+		tx1.Namespace, tx1.Predicate, tx1.Value,
+		tx2.Namespace, tx2.Predicate, tx2.Value,
+	)
+	if buildTaxonomies(txs) != expected {
+		t.Errorf("Wrong taxonomies format:\n%s\n%s", expected, buildTaxonomies(txs))
 	}
 }
