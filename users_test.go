@@ -3,24 +3,14 @@ package cortexbot
 import (
 	"errors"
 	"log"
-	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/boltdb/bolt"
 )
 
-var nums = []rune("0123456789")
-
-func generateFilename() string {
-	b := make([]rune, 8)
-	for i := range b {
-		b[i] = nums[rand.Intn(len(nums))]
-	}
-	return "test" + string(b) + ".db"
-}
-
 func mockupClient() *Client {
-	db, err := bolt.Open(generateFilename(), 0644, nil)
+	db, err := bolt.Open("test.db", 0644, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,6 +32,8 @@ func mockupClient() *Client {
 
 func TestUser(t *testing.T) {
 	c := mockupClient()
+	defer os.Remove("test.db")
+
 	c.registerUser("sample1", "password")
 	c.registerUser("aduser", "active_directory")
 	c.registerUser("googleuser", "oauth")
@@ -57,5 +49,4 @@ func TestUser(t *testing.T) {
 	if c.userExists("nonexistent") {
 		t.Error("Non-existent user exists")
 	}
-
 }
