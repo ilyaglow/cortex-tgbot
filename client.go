@@ -15,12 +15,11 @@ var bucket string = "users"
 
 // Client defines bot's abilities to interact with services
 type Client struct {
-	Bot              *tgbotapi.BotAPI
-	Cortex           *gocortex.Client
-	Password         string
-	AllowedUsernames map[string]bool
-	DB               *bolt.DB
-	UsersBucket      string
+	Bot         *tgbotapi.BotAPI
+	Cortex      *gocortex.Client
+	Password    string
+	DB          *bolt.DB
+	UsersBucket string
 }
 
 // NewClient bootstraps the Client struct from env variables
@@ -48,11 +47,10 @@ func NewClient() *Client {
 	})
 
 	return &Client{
-		Bot:              bot,
-		Cortex:           cortex,
-		Password:         os.Getenv("CORTEX_BOT_PASSWORD"),
-		AllowedUsernames: make(map[string]bool),
-		DB:               db,
-		UsersBucket:      bucket,
+		Bot:         bot,
+		Cortex:      cortex,
+		Password:    os.Getenv("CORTEX_BOT_PASSWORD"),
+		DB:          db,
+		UsersBucket: bucket,
 	}
 }
