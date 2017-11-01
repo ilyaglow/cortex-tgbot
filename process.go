@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/ilyaglow/go-cortex"
@@ -34,14 +35,11 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 			continue
 		}
 
-		txs := m.Taxonomies()
-		// Send every taxonomy as a message
-		for _, t := range txs {
-			msg := tgbotapi.NewMessage(input.Chat.ID, "")
-			msg.ReplyToMessageID = input.MessageID
-			msg.Text = fmt.Sprintf("%s:%s = %s", t.Namespace, t.Predicate, t.Value)
-			c.Bot.Send(msg)
-		}
+		// Send taxonomies as a message
+		msg := tgbotapi.NewMessage(input.Chat.ID, "")
+		msg.ReplyToMessageID = input.MessageID
+		msg.Text = buildTaxonomies(m.Taxonomies())
+		c.Bot.Send(msg)
 
 		// Send JSON file with full report
 		tr, _ := json.MarshalIndent(m, "", "  ")
@@ -57,6 +55,18 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 	}
 
 	return nil
+}
+
+// buildTaxonomies joins taxonomies in one formatted string
+// Every taxonomy is separated with two spaces from each other
+func buildTaxonomies(txs []gocortex.Taxonomy) string {
+	var stats []string
+
+	for _, t := range txs {
+		stats = append(stats, fmt.Sprintf("%s:%s = %s", t.Namespace, t.Predicate, t.Value))
+
+	}
+	return strings.Join(stats, ", ")
 }
 
 // constructJob make a JobBody depends on its type
