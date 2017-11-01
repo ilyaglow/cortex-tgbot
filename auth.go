@@ -2,6 +2,7 @@ package cortexbot
 
 import (
 	"log"
+	"strings"
 
 	"gopkg.in/telegram-bot-api.v4"
 )
@@ -11,8 +12,8 @@ func (c *Client) Auth(input *tgbotapi.Message) {
 	msg := tgbotapi.NewMessage(input.Chat.ID, "")
 	msg.ReplyToMessageID = input.MessageID
 	if input.Text == c.Password {
-		c.AllowedUsernames[input.From.UserName] = true
-		log.Printf("Allowed users: %v", c.AllowedUsernames)
+		c.registerUser(input.From.UserName, "password")
+		log.Printf("Allowed users: %s", strings.Join(c.listUsers(), ","))
 		msg.Text = "Successfully authenticated"
 	} else {
 		msg.Text = "Wrong password"
@@ -22,7 +23,7 @@ func (c *Client) Auth(input *tgbotapi.Message) {
 
 // CheckAuth checks if user is allowed to interact with a bot
 func (c *Client) CheckAuth(u string) bool {
-	if _, ok := c.AllowedUsernames[u]; ok {
+	if c.userExists(u) {
 		return true
 	}
 	return false
