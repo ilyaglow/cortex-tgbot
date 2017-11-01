@@ -4,6 +4,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// registerUser adds a user to boltdb bucket
 func (c *Client) registerUser(u string, method string) {
 	c.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(c.UsersBucket))
@@ -12,6 +13,8 @@ func (c *Client) registerUser(u string, method string) {
 	})
 }
 
+// listUsers returns a slice of all users
+// Users means keys in a users bucket
 func (c *Client) listUsers() []string {
 	var users []string
 
@@ -31,6 +34,7 @@ func (c *Client) listUsers() []string {
 	return users
 }
 
+// userExists checks if user exists among registered users
 func (c *Client) userExists(u string) bool {
 	exists := false
 
