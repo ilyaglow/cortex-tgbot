@@ -11,4 +11,19 @@ script:
   - go test -v -covermode=count -coverprofile=coverage.out
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
   - cd cmd/cortexbot
-  - CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo
+  - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-amd64
+  - CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-386
+  - CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-winx86
+  - CGO_ENABLED=0 GOOS=darwin go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-mac
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  skip_cleanup: true
+  file:
+    - cortexbot-amd64
+    - cortexbot-386
+    - cortexbot-winx86
+    - cortexbot-mac
+  on:
+    repo: ilyaglow/cortex-tgbot
+    tags: true
