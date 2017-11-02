@@ -1,0 +1,17 @@
+version: "2"
+services:
+  bot:
+    restart: always
+    build: .
+    depends_on:
+      - cortex
+    environment:
+      TGBOT_API_TOKEN: "BOTFATHER_TOKEN"
+      CORTEX_LOCATION: "http://cortex"
+      CORTEX_BOT_PASSWORD: "YOUR_CORTEX_PASSPHRASE"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+      - ./bolt.db:/app/bolt.db
+
+  cortex:
+    image: certbdf/cortex
