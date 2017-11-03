@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/ilyaglow/go-cortex"
-	"gopkg.in/telegram-bot-api.v4"
 )
 
 var boltFileName string = "bolt.db"

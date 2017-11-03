@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"gopkg.in/telegram-bot-api.v4"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // Auth handles simple password authentication of a user
