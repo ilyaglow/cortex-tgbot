@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	valid "github.com/asaskevich/govalidator"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/ilyaglow/go-cortex"
-	"gopkg.in/telegram-bot-api.v4"
 )
 
 // ProcessCortex asks Cortex about data submitted by a user
@@ -35,13 +35,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 			continue
 		}
 
-		// Send taxonomies as a message
-		msg := tgbotapi.NewMessage(input.Chat.ID, "")
-		msg.ReplyToMessageID = input.MessageID
-		msg.Text = buildTaxonomies(m.Taxonomies())
-		c.Bot.Send(msg)
-
-		// Send JSON file with full report
+		// Send JSON file with full report and taxonomies
 		tr, _ := json.MarshalIndent(m, "", "  ")
 
 		fb := tgbotapi.FileBytes{
@@ -51,6 +45,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 
 		attachment := tgbotapi.NewDocumentUpload(input.Chat.ID, fb)
 		attachment.ReplyToMessageID = input.MessageID
+		attachment.Caption = buildTaxonomies(m.Taxonomies())
 		c.Bot.Send(attachment)
 	}
 
