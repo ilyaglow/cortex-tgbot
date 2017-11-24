@@ -10,6 +10,10 @@ import (
 	"github.com/ilyaglow/go-cortex"
 )
 
+// defaultTLP is Green because indicators reaching telegram servers
+// TODO: think about making it configurable
+const defaultTLP = 1
+
 var boltFileName string = "bolt.db"
 var bucket string = "users"
 
@@ -20,6 +24,7 @@ type Client struct {
 	Password    string
 	DB          *bolt.DB
 	UsersBucket string
+	TLP         int
 }
 
 // NewClient bootstraps the Client struct from env variables
@@ -52,5 +57,6 @@ func NewClient() *Client {
 		Password:    os.Getenv("CORTEX_BOT_PASSWORD"),
 		DB:          db,
 		UsersBucket: bucket,
+		TLP:         defaultTLP,
 	}
 }
