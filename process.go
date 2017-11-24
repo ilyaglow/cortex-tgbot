@@ -14,7 +14,7 @@ import (
 
 // ProcessCortex asks Cortex about data submitted by a user
 func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
-	j, err := constructJob(input.Text)
+	j, err := constructJob(input.Text, c.TLP)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -65,7 +65,7 @@ func buildTaxonomies(txs []gocortex.Taxonomy) string {
 }
 
 // constructJob make a JobBody depends on its type
-func constructJob(s string) (*gocortex.JobBody, error) {
+func constructJob(s string, tlp int) (*gocortex.JobBody, error) {
 	var dataType string
 
 	if valid.IsIP(s) {
@@ -85,7 +85,7 @@ func constructJob(s string) (*gocortex.JobBody, error) {
 		Data: s,
 		Attributes: gocortex.ArtifactAttributes{
 			DataType: dataType,
-			TLP:      3,
+			TLP:      tlp,
 		},
 	}
 
