@@ -9,8 +9,9 @@ import (
 
 func TestConstructJobFromIP(t *testing.T) {
 	ip := "1.1.1.1"
+	tlp := 1
 
-	j, err := constructJob(ip)
+	j, err := constructJob(ip, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from an IP")
 	}
@@ -22,8 +23,9 @@ func TestConstructJobFromIP(t *testing.T) {
 
 func TestConstructJobFromLink(t *testing.T) {
 	link := "https://subdomain.domain.com/route/query?param=val"
+	tlp := 0
 
-	j, err := constructJob(link)
+	j, err := constructJob(link, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a URL")
 	}
@@ -35,8 +37,9 @@ func TestConstructJobFromLink(t *testing.T) {
 
 func TestConstructJobFromDomain(t *testing.T) {
 	domain := "subdomain.domain.com"
+	tlp := 2
 
-	j, err := constructJob(domain)
+	j, err := constructJob(domain, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a domain")
 	}
@@ -48,8 +51,9 @@ func TestConstructJobFromDomain(t *testing.T) {
 
 func TestConstructJobFromHash(t *testing.T) {
 	hash := "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
+	tlp := 3
 
-	j, err := constructJob(hash)
+	j, err := constructJob(hash, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a hash")
 	}
@@ -61,8 +65,9 @@ func TestConstructJobFromHash(t *testing.T) {
 
 func TestConstructJobFromUnknown(t *testing.T) {
 	unknown := "unknown_data"
+	tlp := 2
 
-	_, err := constructJob(unknown)
+	_, err := constructJob(unknown, tlp)
 	if err == nil {
 		t.Error("Unknown data didn't trigger the error")
 	}
