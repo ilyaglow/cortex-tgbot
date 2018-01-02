@@ -20,7 +20,7 @@ var bucket string = "users"
 // Client defines bot's abilities to interact with services
 type Client struct {
 	Bot         *tgbotapi.BotAPI
-	Cortex      *gocortex.Client
+	Cortex      *cortex.Client
 	Password    string
 	DB          *bolt.DB
 	UsersBucket string
@@ -35,7 +35,7 @@ func NewClient() *Client {
 		log.Panic(err)
 	}
 
-	cortex := gocortex.NewClient(os.Getenv("CORTEX_LOCATION"))
+	cortex := cortex.NewClient(os.Getenv("CORTEX_LOCATION"))
 
 	db, err := bolt.Open("bolt.db", 0644, nil)
 	if err != nil {

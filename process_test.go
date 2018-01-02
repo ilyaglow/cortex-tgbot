@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gocortex "github.com/ilyaglow/go-cortex"
+	"github.com/ilyaglow/go-cortex"
 )
 
 func TestConstructJobFromIP(t *testing.T) {
@@ -74,9 +74,9 @@ func TestConstructJobFromUnknown(t *testing.T) {
 }
 
 func TestBuildTaxonomies(t *testing.T) {
-	var txs []gocortex.Taxonomy
+	var txs []cortex.Taxonomy
 
-	tx1 := gocortex.Taxonomy{
+	tx1 := cortex.Taxonomy{
 		Predicate: "Predicate1",
 		Namespace: "Namespace1",
 		Value:     "Value1",
@@ -84,7 +84,7 @@ func TestBuildTaxonomies(t *testing.T) {
 	}
 	txs = append(txs, tx1)
 
-	tx2 := gocortex.Taxonomy{
+	tx2 := cortex.Taxonomy{
 		Predicate: "Predicate2",
 		Namespace: "Namespace2",
 		Value:     "Value2",

@@ -54,7 +54,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 
 // buildTaxonomies joins taxonomies in one formatted string
 // Every taxonomy is separated with two spaces from each other
-func buildTaxonomies(txs []gocortex.Taxonomy) string {
+func buildTaxonomies(txs []cortex.Taxonomy) string {
 	var stats []string
 
 	for _, t := range txs {
@@ -64,8 +64,8 @@ func buildTaxonomies(txs []gocortex.Taxonomy) string {
 	return strings.Join(stats, ", ")
 }
 
-// constructJob make a JobBody depends on its type
-func constructJob(s string, tlp int) (*gocortex.JobBody, error) {
+// constructJob makes an Artifact depends on its type
+func constructJob(s string, tlp int) (*cortex.Artifact, error) {
 	var dataType string
 
 	if valid.IsIP(s) {
@@ -81,9 +81,9 @@ func constructJob(s string, tlp int) (*gocortex.JobBody, error) {
 		return nil, errors.New("Unknown data type")
 	}
 
-	j := &gocortex.JobBody{
+	j := &cortex.Artifact{
 		Data: s,
-		Attributes: gocortex.ArtifactAttributes{
+		Attributes: cortex.ArtifactAttributes{
 			DataType: dataType,
 			TLP:      tlp,
 		},
