@@ -25,13 +25,13 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 			return err
 		}
 
-		j, err = constructFileJob(link, c.TLP)
+		j, err = newFileArtifactFromURL(link, c.TLP)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
 	} else {
-		j, err = constructJob(input.Text, c.TLP)
+		j, err = newArtifact(input.Text, c.TLP)
 		if err != nil {
 			log.Println(err.Error())
 			return err
@@ -83,8 +83,8 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 	return strings.Join(stats, ", ")
 }
 
-// constructJob makes an Artifact depends on its type
-func constructJob(s string, tlp int) (cortex.Observable, error) {
+// newArtifact makes an Artifact depends on its type
+func newArtifact(s string, tlp int) (cortex.Observable, error) {
 	var dataType string
 
 	if valid.IsIP(s) {
@@ -111,8 +111,8 @@ func constructJob(s string, tlp int) (cortex.Observable, error) {
 	return j, nil
 }
 
-// constructFileJob makes a FileArtifact
-func constructFileJob(link string, tlp int) (cortex.Observable, error) {
+// newFileArtifactFromURL makes a FileArtifact from URL
+func newFileArtifactFromURL(link string, tlp int) (cortex.Observable, error) {
 	resp, err := http.Get(link)
 	if err != nil {
 		return nil, err

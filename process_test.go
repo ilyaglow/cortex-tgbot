@@ -11,12 +11,12 @@ func TestConstructJobFromIP(t *testing.T) {
 	ip := "1.1.1.1"
 	tlp := 1
 
-	j, err := constructJob(ip, tlp)
+	j, err := newArtifact(ip, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from an IP")
 	}
 
-	if j.Attributes.DataType != "ip" {
+	if j.(*cortex.Artifact).Attributes.DataType != "ip" {
 		t.Error("Failed datatype in Cortex Job constructed from an IP")
 	}
 }
@@ -25,12 +25,12 @@ func TestConstructJobFromLink(t *testing.T) {
 	link := "https://subdomain.domain.com/route/query?param=val"
 	tlp := 0
 
-	j, err := constructJob(link, tlp)
+	j, err := newArtifact(link, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a URL")
 	}
 
-	if j.Attributes.DataType != "url" {
+	if j.(*cortex.Artifact).Attributes.DataType != "url" {
 		t.Error("Failed datatype in Cortex Job constructed from a URL")
 	}
 }
@@ -39,12 +39,12 @@ func TestConstructJobFromDomain(t *testing.T) {
 	domain := "subdomain.domain.com"
 	tlp := 2
 
-	j, err := constructJob(domain, tlp)
+	j, err := newArtifact(domain, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a domain")
 	}
 
-	if j.Attributes.DataType != "domain" {
+	if j.(*cortex.Artifact).Attributes.DataType != "domain" {
 		t.Error("Failed datatype in Cortex Job constructed from a domain")
 	}
 }
@@ -53,12 +53,12 @@ func TestConstructJobFromHash(t *testing.T) {
 	hash := "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
 	tlp := 3
 
-	j, err := constructJob(hash, tlp)
+	j, err := newArtifact(hash, tlp)
 	if err != nil {
 		t.Error("Failed to construct Cortex Job from a hash")
 	}
 
-	if j.Attributes.DataType != "hash" {
+	if j.(*cortex.Artifact).Attributes.DataType != "hash" {
 		t.Error("Failed datatype in Cortex Job constructed from a hash")
 	}
 }
@@ -67,7 +67,7 @@ func TestConstructJobFromUnknown(t *testing.T) {
 	unknown := "unknown_data"
 	tlp := 2
 
-	_, err := constructJob(unknown, tlp)
+	_, err := newArtifact(unknown, tlp)
 	if err == nil {
 		t.Error("Unknown data didn't trigger the error")
 	}
