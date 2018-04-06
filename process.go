@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	valid "github.com/asaskevich/govalidator"
@@ -14,10 +15,27 @@ import (
 
 // ProcessCortex asks Cortex about data submitted by a user
 func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
-	j, err := constructJob(input.Text, c.TLP)
-	if err != nil {
-		log.Println(err.Error())
-		return err
+	var j cortex.Observable
+	var err error
+
+	if input.Document != nil {
+		link, err := c.Bot.GetFileDirectURL(input.Document.FileID)
+		if err != nil {
+			log.Println("Can't get direct link to file")
+			return err
+		}
+
+		j, err = constructFileJob(link, c.TLP)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+	} else {
+		j, err = constructJob(input.Text, c.TLP)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
 	}
 
 	// Run all analyzers over it with 1 minute timeout
@@ -32,6 +50,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 	// Iterate over channel with reports and get taxonomies
 	for m := range reports {
 		if m.Status == "Failure" {
+			log.Printf("Analyzer %s failed with error message: %s", m.AnalyzerID, m.Report.ErrorMessage)
 			continue
 		}
 
@@ -65,7 +84,7 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 }
 
 // constructJob makes an Artifact depends on its type
-func constructJob(s string, tlp int) (*cortex.Artifact, error) {
+func constructJob(s string, tlp int) (cortex.Observable, error) {
 	var dataType string
 
 	if valid.IsIP(s) {
@@ -90,4 +109,21 @@ func constructJob(s string, tlp int) (*cortex.Artifact, error) {
 	}
 
 	return j, nil
+}
+
+// constructFileJob makes a FileArtifact
+func constructFileJob(link string, tlp int) (cortex.Observable, error) {
+	resp, err := http.Get(link)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cortex.FileArtifact{
+		FileArtifactMeta: cortex.FileArtifactMeta{
+			DataType: "file",
+			TLP:      tlp,
+		},
+		FileName: link,
+		Reader:   resp.Body,
+	}, nil
 }
