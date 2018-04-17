@@ -24,6 +24,7 @@ By now the following data types are supported for lookup:
 * Hash
 * IP
 * URL
+* File
 
 
 PRs are welcome!
