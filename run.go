@@ -2,10 +2,13 @@ package cortexbot
 
 import (
 	"log"
+	"strings"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+// Run represents infinite function that waits for a message,
+// authenticate user and process task
 func (c *Client) Run() {
 	defer c.DB.Close()
 
@@ -17,6 +20,7 @@ func (c *Client) Run() {
 		log.Fatal(err)
 	}
 	log.Printf("Authorized on account %s", c.Bot.Self.UserName)
+	log.Printf("Users in database: %s", strings.Join(",", c.listUsers()))
 
 	for update := range updates {
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -34,10 +38,12 @@ func (c *Client) Run() {
 		}
 
 		if c.CheckAuth(update.Message.From.UserName) {
-			if err := c.ProcessCortex(update.Message); err != nil {
-				msg.Text = err.Error()
-				c.Bot.Send(msg)
-			}
+			go func() {
+				if err := c.ProcessCortex(update.Message); err != nil {
+					msg.Text = err.Error()
+					c.Bot.Send(msg)
+				}
+			}()
 		} else {
 			c.Auth(update.Message)
 		}
