@@ -15,6 +15,12 @@ Start bot from the source code (you can use [compiled version](https://github.co
 CORTEX_BOT_PASSWORD=PassphraseForAuth CORTEX_LOCATION=http://127.0.0.1:9000 TGBOT_API_TOKEN=TOKEN go run cmd/cortexbot/main.go
 ```
 
+### Work through SOCKS5 proxy
+
+```
+SOCKS5_URL=socks5://user:password@server:port CORTEX_BOT_PASSWORD=PassphraseForAuth CORTEX_LOCATION=http://127.0.0.1:9000 TGBOT_API_TOKEN=TOKEN go run cmd/cortexbot/main.go
+```
+
 Add bot to your contacts, enter the passphrase and here you go - submit data and wait for results.
 
 ## Supported data types
