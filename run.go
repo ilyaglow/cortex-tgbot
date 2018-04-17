@@ -20,7 +20,7 @@ func (c *Client) Run() {
 		log.Fatal(err)
 	}
 	log.Printf("Authorized on account %s", c.Bot.Self.UserName)
-	log.Printf("Users in database: %s", strings.Join(",", c.listUsers()))
+	log.Printf("Users in database: %s", strings.Join(c.listUsers(), ","))
 
 	for update := range updates {
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
