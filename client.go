@@ -3,7 +3,11 @@ package cortexbot
 import (
 	"errors"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
+
+	"golang.org/x/net/proxy"
 
 	"github.com/boltdb/bolt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -14,8 +18,8 @@ import (
 // TODO: think about making it configurable
 const defaultTLP = 1
 
-var boltFileName string = "bolt.db"
-var bucket string = "users"
+var boltFileName = "bolt.db"
+var bucket = "users"
 
 // Client defines bot's abilities to interact with services
 type Client struct {
@@ -27,12 +31,43 @@ type Client struct {
 	TLP         int
 }
 
+// socks5Client bootstraps http.Client that uses socks5 proxy
+func socks5Client(u *url.URL) (*http.Client, error) {
+	dialer, err := proxy.FromURL(u, proxy.Direct)
+	if err != nil {
+		return nil, err
+	}
+
+	return &http.Client{Transport: &http.Transport{Dial: dialer.Dial}}, nil
+}
+
 // NewClient bootstraps the Client struct from env variables
 func NewClient() *Client {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TGBOT_API_TOKEN"))
-	if err != nil {
-		log.Println("TGBOT_API_TOKEN env variable is empty")
-		log.Panic(err)
+	var (
+		bot *tgbotapi.BotAPI
+		err error
+	)
+
+	if proxy, ok := os.LookupEnv("SOCKS5_URL"); ok {
+		surl, err := url.Parse(proxy)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		sc, err := socks5Client(surl)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		bot, err = tgbotapi.NewBotAPIWithClient(os.Getenv("TGBOT_API_TOKEN"), sc)
+		if err != nil {
+			log.Panic(err)
+		}
+	} else {
+		bot, err = tgbotapi.NewBotAPI(os.Getenv("TGBOT_API_TOKEN"))
+		if err != nil {
+			log.Panic(err)
+		}
 	}
 
 	cortex := cortex.NewClient(os.Getenv("CORTEX_LOCATION"))
