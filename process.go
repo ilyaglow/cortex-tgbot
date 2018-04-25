@@ -95,6 +95,8 @@ func newArtifact(s string, tlp int) (cortex.Observable, error) {
 		dataType = "hash"
 	} else if valid.IsURL(s) {
 		dataType = "url"
+	} else if valid.IsEmail(s) {
+		dataType = "mail"
 	} else {
 		dataType = "unknown"
 		return nil, errors.New("Unknown data type")

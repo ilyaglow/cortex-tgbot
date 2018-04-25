@@ -31,6 +31,7 @@ By now the following data types are supported for lookup:
 * IP
 * URL
 * File
+* Email
 
 
 PRs are welcome!
