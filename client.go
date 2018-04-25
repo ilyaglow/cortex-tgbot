@@ -61,16 +61,16 @@ func NewClient() *Client {
 
 		bot, err = tgbotapi.NewBotAPIWithClient(os.Getenv("TGBOT_API_TOKEN"), sc)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal("TGBOT_API_TOKEN environment variable is not set")
 		}
 	} else {
 		bot, err = tgbotapi.NewBotAPI(os.Getenv("TGBOT_API_TOKEN"))
 		if err != nil {
-			log.Panic(err)
+			log.Fatal("TGBOT_API_TOKEN environment variable is not set")
 		}
 	}
 
-	cortex := cortex.NewClient(os.Getenv("CORTEX_LOCATION"))
+	crtx := cortex.NewClient(os.Getenv("CORTEX_LOCATION"))
 
 	db, err := bolt.Open("bolt.db", 0644, nil)
 	if err != nil {
@@ -88,7 +88,7 @@ func NewClient() *Client {
 
 	return &Client{
 		Bot:         bot,
-		Cortex:      cortex,
+		Cortex:      crtx,
 		Password:    os.Getenv("CORTEX_BOT_PASSWORD"),
 		DB:          db,
 		UsersBucket: bucket,
