@@ -79,7 +79,7 @@ func NewClient() *Client {
 
 	// Create a bucket
 	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte(bucket))
+		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
 			return errors.New("Create users bucket failed")
 		}
