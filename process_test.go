@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ilyaglow/go-cortex"
+	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
 )
 
 func TestConstructJobFromIP(t *testing.T) {
@@ -16,7 +16,7 @@ func TestConstructJobFromIP(t *testing.T) {
 		t.Error("Failed to construct Cortex Job from an IP")
 	}
 
-	if j.(*cortex.Artifact).Attributes.DataType != "ip" {
+	if j.(*cortex.Task).DataType != "ip" {
 		t.Error("Failed datatype in Cortex Job constructed from an IP")
 	}
 }
@@ -30,7 +30,7 @@ func TestConstructJobFromLink(t *testing.T) {
 		t.Error("Failed to construct Cortex Job from a URL")
 	}
 
-	if j.(*cortex.Artifact).Attributes.DataType != "url" {
+	if j.(*cortex.Task).DataType != "url" {
 		t.Error("Failed datatype in Cortex Job constructed from a URL")
 	}
 }
@@ -44,7 +44,7 @@ func TestConstructJobFromDomain(t *testing.T) {
 		t.Error("Failed to construct Cortex Job from a domain")
 	}
 
-	if j.(*cortex.Artifact).Attributes.DataType != "domain" {
+	if j.(*cortex.Task).DataType != "domain" {
 		t.Error("Failed datatype in Cortex Job constructed from a domain")
 	}
 }
@@ -58,7 +58,7 @@ func TestConstructJobFromHash(t *testing.T) {
 		t.Error("Failed to construct Cortex Job from a hash")
 	}
 
-	if j.(*cortex.Artifact).Attributes.DataType != "hash" {
+	if j.(*cortex.Task).DataType != "hash" {
 		t.Error("Failed datatype in Cortex Job constructed from a hash")
 	}
 }
