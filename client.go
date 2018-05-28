@@ -11,7 +11,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/ilyaglow/go-cortex"
+	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
 )
 
 // defaultTLP is Green because indicators reaching telegram servers
@@ -70,7 +70,14 @@ func NewClient() *Client {
 		}
 	}
 
-	crtx := cortex.NewClient(os.Getenv("CORTEX_LOCATION"))
+	crtx, err := cortex.NewClient(os.Getenv("CORTEX_LOCATION"), &cortex.ClientOpts{
+		Auth: &cortex.APIAuth{
+			APIKey: os.Getenv("CORTEX_API_KEY"),
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := bolt.Open("bolt.db", 0644, nil)
 	if err != nil {

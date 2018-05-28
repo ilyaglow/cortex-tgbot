@@ -1,16 +1,18 @@
 package cortexbot
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/ilyaglow/go-cortex"
+	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
 )
 
 // ProcessCortex asks Cortex about data submitted by a user
@@ -39,33 +41,38 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 	}
 
 	// Run all analyzers over it with 1 minute timeout
-	reports, err := c.Cortex.AnalyzeData(j, "1minute")
-	if err != nil {
-		msg := tgbotapi.NewMessage(input.Chat.ID, "")
-		msg.ReplyToMessageID = input.MessageID
-		msg.Text = fmt.Sprintf("Cortex failed with an error: %s", err.Error())
-		c.Bot.Send(msg)
-	}
-
-	// Iterate over channel with reports and get taxonomies
-	for m := range reports {
-		if m.Status == "Failure" {
-			log.Printf("Analyzer %s failed with error message: %s", m.AnalyzerID, m.Report.ErrorMessage)
-			continue
+	mul := c.Cortex.Analyzers.NewMultiRun(context.Background(), 5*time.Minute)
+	mul.OnReport = func(r *cortex.Report) {
+		if r.Status == "Failure" {
+			log.Printf("Analyzer %s failed with error message: %s", r.AnalyzerID, r.ReportBody.ErrorMessage)
+			return
 		}
 
 		// Send JSON file with full report and taxonomies
-		tr, _ := json.MarshalIndent(m, "", "  ")
+		tr, _ := json.MarshalIndent(r, "", "  ")
 
 		fb := tgbotapi.FileBytes{
-			Name:  fmt.Sprintf("%s-%s.json", m.AnalyzerID, m.ID),
+			Name:  fmt.Sprintf("%s-%s.json", r.AnalyzerID, r.ID),
 			Bytes: tr,
 		}
 
 		attachment := tgbotapi.NewDocumentUpload(input.Chat.ID, fb)
 		attachment.ReplyToMessageID = input.MessageID
-		attachment.Caption = buildTaxonomies(m.Taxonomies())
+		attachment.Caption = buildTaxonomies(r.Taxonomies())
 		c.Bot.Send(attachment)
+
+	}
+
+	mul.OnError = func(e error) {
+		msg := tgbotapi.NewMessage(input.Chat.ID, "")
+		msg.ReplyToMessageID = input.MessageID
+		msg.Text = fmt.Sprintf("Cortex failed with an error: %s", e.Error())
+		c.Bot.Send(msg)
+	}
+
+	err = mul.Do(j)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -102,12 +109,10 @@ func newArtifact(s string, tlp int) (cortex.Observable, error) {
 		return nil, errors.New("Unknown data type")
 	}
 
-	j := &cortex.Artifact{
-		Data: s,
-		Attributes: cortex.ArtifactAttributes{
-			DataType: dataType,
-			TLP:      tlp,
-		},
+	j := &cortex.Task{
+		Data:     s,
+		DataType: dataType,
+		TLP:      tlp,
 	}
 
 	return j, nil
@@ -120,8 +125,8 @@ func newFileArtifactFromURL(link string, tlp int) (cortex.Observable, error) {
 		return nil, err
 	}
 
-	return &cortex.FileArtifact{
-		FileArtifactMeta: cortex.FileArtifactMeta{
+	return &cortex.FileTask{
+		FileTaskMeta: cortex.FileTaskMeta{
 			DataType: "file",
 			TLP:      tlp,
 		},
