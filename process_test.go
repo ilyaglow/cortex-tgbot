@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
+	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 
 func TestConstructJobFromIP(t *testing.T) {

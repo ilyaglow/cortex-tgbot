@@ -11,7 +11,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
+	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 
 // defaultTLP is Green because indicators reaching telegram servers

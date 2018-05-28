@@ -12,7 +12,7 @@ import (
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"gopkg.ilya.app/ilyaglow/go-cortex.v2"
+	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 
 // ProcessCortex asks Cortex about data submitted by a user
