@@ -48,6 +48,11 @@ func NewClient() *Client {
 		err error
 	)
 
+	tgToken, ok := os.LookupEnv("TGBOT_API_TOKEN")
+	if !ok {
+		log.Fatal("TGBOT_API_TOKEN environment variable is not set")
+	}
+
 	if proxy, ok := os.LookupEnv("SOCKS5_URL"); ok {
 		surl, err := url.Parse(proxy)
 		if err != nil {
@@ -59,14 +64,14 @@ func NewClient() *Client {
 			log.Panic(err)
 		}
 
-		bot, err = tgbotapi.NewBotAPIWithClient(os.Getenv("TGBOT_API_TOKEN"), sc)
+		bot, err = tgbotapi.NewBotAPIWithClient(tgToken, sc)
 		if err != nil {
-			log.Fatal("TGBOT_API_TOKEN environment variable is not set")
+			log.Fatal(err)
 		}
 	} else {
-		bot, err = tgbotapi.NewBotAPI(os.Getenv("TGBOT_API_TOKEN"))
+		bot, err = tgbotapi.NewBotAPI(tgToken)
 		if err != nil {
-			log.Fatal("TGBOT_API_TOKEN environment variable is not set")
+			log.Fatal(err)
 		}
 	}
 
