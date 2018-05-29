@@ -44,7 +44,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 	mul := c.Cortex.Analyzers.NewMultiRun(context.Background(), 5*time.Minute)
 	mul.OnReport = func(r *cortex.Report) {
 		if r.Status == "Failure" {
-			log.Printf("Analyzer %s failed with error message: %s", r.AnalyzerID, r.ReportBody.ErrorMessage)
+			log.Printf("Analyzer %s failed with error message: %s", r.AnalyzerName, r.ReportBody.ErrorMessage)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 		tr, _ := json.MarshalIndent(r, "", "  ")
 
 		fb := tgbotapi.FileBytes{
-			Name:  fmt.Sprintf("%s-%s.json", r.AnalyzerID, r.ID),
+			Name:  fmt.Sprintf("%s-%s.json", r.AnalyzerName, r.ID),
 			Bytes: tr,
 		}
 
@@ -63,11 +63,8 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 
 	}
 
-	mul.OnError = func(e error) {
-		msg := tgbotapi.NewMessage(input.Chat.ID, "")
-		msg.ReplyToMessageID = input.MessageID
-		msg.Text = fmt.Sprintf("Cortex failed with an error: %s", e.Error())
-		c.Bot.Send(msg)
+	mul.OnError = func(e error, o cortex.Observable, a *cortex.Analyzer) {
+		log.Println(fmt.Sprintf("Cortex analyzer %s failed on data %s with an error: %s", a.Name, o.Description(), e.Error()))
 	}
 
 	err = mul.Do(j)
@@ -112,7 +109,7 @@ func newArtifact(s string, tlp int) (cortex.Observable, error) {
 	j := &cortex.Task{
 		Data:     s,
 		DataType: dataType,
-		TLP:      tlp,
+		TLP:      &tlp,
 	}
 
 	return j, nil
@@ -128,7 +125,7 @@ func newFileArtifactFromURL(link string, tlp int) (cortex.Observable, error) {
 	return &cortex.FileTask{
 		FileTaskMeta: cortex.FileTaskMeta{
 			DataType: "file",
-			TLP:      tlp,
+			TLP:      &tlp,
 		},
 		FileName: link,
 		Reader:   resp.Body,
