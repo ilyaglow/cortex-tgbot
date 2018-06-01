@@ -27,7 +27,7 @@ func (c *Client) ProcessCortex(input *tgbotapi.Message) error {
 			return err
 		}
 
-		j, err = newFileArtifactFromURL(link, c.TLP, c.Bot.Client)
+		j, err = newFileArtifactFromURL(link, input.Document.FileName, c.TLP, c.Bot.Client)
 		if err != nil {
 			log.Println(err.Error())
 			return err
@@ -116,7 +116,7 @@ func newArtifact(s string, tlp int) (cortex.Observable, error) {
 }
 
 // newFileArtifactFromURL makes a FileArtifact from URL
-func newFileArtifactFromURL(link string, tlp int, client *http.Client) (cortex.Observable, error) {
+func newFileArtifactFromURL(link string, fname string, tlp int, client *http.Client) (cortex.Observable, error) {
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func newFileArtifactFromURL(link string, tlp int, client *http.Client) (cortex.O
 			DataType: "file",
 			TLP:      &tlp,
 		},
-		FileName: link,
+		FileName: fname,
 		Reader:   resp.Body,
 	}, nil
 }
