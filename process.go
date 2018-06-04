@@ -81,7 +81,7 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 	var stats []string
 
 	for _, t := range txs {
-		stats = append(stats, fmt.Sprintf("%s:%s = %s", t.Namespace, t.Predicate, t.Value))
+		stats = append(stats, fmt.Sprintf("%s:%s = %v", t.Namespace, t.Predicate, t.Value))
 
 	}
 	return strings.Join(stats, ", ")
