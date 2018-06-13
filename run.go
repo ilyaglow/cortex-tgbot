@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/ilyaglow/telegram-bot-api"
 )
 
 // Run represents infinite function that waits for a message,

@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/ilyaglow/telegram-bot-api"
 )
 
 // Auth handles simple password authentication of a user

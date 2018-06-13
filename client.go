@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/boltdb/bolt"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/ilyaglow/telegram-bot-api"
 	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	valid "github.com/asaskevich/govalidator"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/ilyaglow/telegram-bot-api"
 	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 
