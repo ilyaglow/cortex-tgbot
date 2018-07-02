@@ -32,9 +32,9 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 	attachment := tgbotapi.NewDocumentUpload(callback.Message.Chat.ID, fb)
 	attachment.ReplyToMessageID = callback.Message.ReplyToMessage.MessageID
 	attachment.Caption = buildTaxonomies(r.Taxonomies())
-	_, err := c.Bot.Send(attachment)
+	go c.Bot.Send(attachment)
 
-	return err
+	return nil
 }
 
 // processCallback analyzes observables with a selected set of analyzers
@@ -77,14 +77,14 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 	case "close":
 		kb := showButton()
 		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		c.Bot.Send(edit)
+		go c.Bot.Send(edit)
 	case "show":
 		kb, err := c.analyzersButtons(dataType(callback.Message.ReplyToMessage.Text))
 		if err != nil {
 			return err
 		}
 		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		c.Bot.Send(edit)
+		go c.Bot.Send(edit)
 	default:
 		r, err := c.Cortex.Analyzers.Run(context.Background(), callback.Data, j, time.Minute*5)
 		if err != nil {
@@ -100,9 +100,9 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 	}
 
 	cbcfg := tgbotapi.NewCallback(callback.ID, "")
-	_, err = c.Bot.AnswerCallbackQuery(cbcfg)
+	go c.Bot.AnswerCallbackQuery(cbcfg)
 
-	return err
+	return nil
 }
 
 // analyzersButtons returns a markup of analyzers as buttons
