@@ -4,72 +4,33 @@ import (
 	"fmt"
 	"testing"
 
-	"gopkg.in/ilyaglow/go-cortex.v2"
+	"github.com/ilyaglow/go-cortex"
 )
 
-func TestConstructJobFromIP(t *testing.T) {
-	ip := "1.1.1.1"
-	tlp := 1
-
-	j, err := newArtifact(ip, tlp)
-	if err != nil {
-		t.Error("Failed to construct Cortex Job from an IP")
+func TestObservableConstructor(t *testing.T) {
+	var cases = []struct {
+		data     string
+		tlp      int
+		dataType string
+	}{
+		{"1.1.1.1", 0, "ip"},
+		{"https://subdomain.domain.com/route/query?param=val", 1, "url"},
+		{"subdomain.domain.com", 2, "domain"},
+		{"email.address@domain.com", 3, "mail"},
+		{"email+address@domain.com", 3, "mail"},
+		{"a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", 0, "hash"},
+		{"randomdata", 1, "other"},
 	}
 
-	if j.(*cortex.Task).DataType != "ip" {
-		t.Error("Failed datatype in Cortex Job constructed from an IP")
-	}
-}
+	for _, c := range cases {
+		a := newArtifact(c.data, c.tlp)
+		if a.Description() != c.data {
+			t.Errorf("need %s, got %s", c.data, a.Description())
+		}
 
-func TestConstructJobFromLink(t *testing.T) {
-	link := "https://subdomain.domain.com/route/query?param=val"
-	tlp := 0
-
-	j, err := newArtifact(link, tlp)
-	if err != nil {
-		t.Error("Failed to construct Cortex Job from a URL")
-	}
-
-	if j.(*cortex.Task).DataType != "url" {
-		t.Error("Failed datatype in Cortex Job constructed from a URL")
-	}
-}
-
-func TestConstructJobFromDomain(t *testing.T) {
-	domain := "subdomain.domain.com"
-	tlp := 2
-
-	j, err := newArtifact(domain, tlp)
-	if err != nil {
-		t.Error("Failed to construct Cortex Job from a domain")
-	}
-
-	if j.(*cortex.Task).DataType != "domain" {
-		t.Error("Failed datatype in Cortex Job constructed from a domain")
-	}
-}
-
-func TestConstructJobFromHash(t *testing.T) {
-	hash := "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
-	tlp := 3
-
-	j, err := newArtifact(hash, tlp)
-	if err != nil {
-		t.Error("Failed to construct Cortex Job from a hash")
-	}
-
-	if j.(*cortex.Task).DataType != "hash" {
-		t.Error("Failed datatype in Cortex Job constructed from a hash")
-	}
-}
-
-func TestConstructJobFromUnknown(t *testing.T) {
-	unknown := "unknown_data"
-	tlp := 2
-
-	_, err := newArtifact(unknown, tlp)
-	if err == nil {
-		t.Error("Unknown data didn't trigger the error")
+		if a.Type() != c.dataType {
+			t.Errorf("need %s, got %s", c.dataType, a.Type())
+		}
 	}
 }
 

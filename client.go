@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/boltdb/bolt"
+	"github.com/ilyaglow/go-cortex"
 	"github.com/ilyaglow/telegram-bot-api"
-	"gopkg.in/ilyaglow/go-cortex.v2"
 )
 
 // defaultTLP is Green because indicators reaching telegram servers

@@ -23,29 +23,37 @@ func (c *Client) Run() {
 	log.Printf("Users in database: %s", strings.Join(c.listUsers(), ","))
 
 	for update := range updates {
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-		msg.ReplyToMessageID = update.Message.MessageID
-
-		if update.Message.IsCommand() &&
-			update.Message.Command() == "start" &&
-			!c.CheckAuth(update.Message.From.UserName) {
-
-			msg.Text = "Enter your password"
-			c.Bot.Send(msg)
-			continue
-		}
-
-		if c.CheckAuth(update.Message.From.UserName) {
-			go func() {
-				if err := c.ProcessCortex(update.Message); err != nil {
-					msg.Text = err.Error()
-					c.Bot.Send(msg)
-				}
-			}()
+		if update.CallbackQuery != nil {
+			log.Printf("[%s] %s", update.CallbackQuery.Message.From.UserName, update.CallbackQuery.Message.Text)
+			if err := c.processCallback(update.CallbackQuery); err != nil {
+				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+				msg.ReplyToMessageID = update.CallbackQuery.Message.MessageID
+				c.Bot.Send(msg)
+			}
 		} else {
-			c.Auth(update.Message)
+			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+			msg.ReplyToMessageID = update.Message.MessageID
+
+			if update.Message.IsCommand() &&
+				update.Message.Command() == "start" &&
+				!c.CheckAuth(update.Message.From.UserName) {
+				msg.Text = "Enter your password"
+				c.Bot.Send(msg)
+				continue
+			}
+
+			if c.CheckAuth(update.Message.From.UserName) {
+				go func() {
+					if err := c.processMessage(update.Message); err != nil {
+						msg.Text = err.Error()
+						c.Bot.Send(msg)
+					}
+				}()
+			} else {
+				c.Auth(update.Message)
+			}
 		}
 	}
 }
