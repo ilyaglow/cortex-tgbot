@@ -4,9 +4,11 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/boltdb/bolt"
+	"github.com/ilyaglow/telegram-bot-api"
 )
 
 func mockupClient() *Client {
@@ -34,16 +36,30 @@ func TestUser(t *testing.T) {
 	c := mockupClient()
 	defer os.Remove("test.db")
 
-	c.registerUser("sample1", "password")
-	c.registerUser("aduser", "active_directory")
-	c.registerUser("googleuser", "oauth")
-
-	if len(c.listUsers()) != 3 {
-		t.Error("There are not 3 users in a bucket as supposed to be")
+	var usertests = []struct {
+		u  *tgbotapi.User
+		id string
+	}{
+		{&tgbotapi.User{
+			ID: 10000,
+		}, strconv.Itoa(10000)},
+		{&tgbotapi.User{
+			ID: 20000,
+		}, strconv.Itoa(20000)},
 	}
 
-	if !c.userExists("aduser") {
-		t.Error("Registered user doesn't exist")
+	for _, ut := range usertests {
+		if err := c.registerUser(ut.u); err != nil {
+			t.Error(err)
+		}
+
+		if !c.userExists(ut.id) {
+			t.Errorf("%s is not found", ut.id)
+		}
+	}
+
+	if len(c.listUsers()) != 2 {
+		t.Error("There are not 2 users in a bucket as supposed to be")
 	}
 
 	if c.userExists("nonexistent") {

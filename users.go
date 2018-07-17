@@ -1,16 +1,27 @@
 package cortexbot
 
 import (
+	"encoding/json"
+	"strconv"
+
 	"github.com/boltdb/bolt"
+	"github.com/ilyaglow/telegram-bot-api"
 )
 
 // registerUser adds a user to boltdb bucket
-func (c *Client) registerUser(u string, method string) {
+func (c *Client) registerUser(u *tgbotapi.User) error {
+	data, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+
 	c.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(c.UsersBucket))
-		err := b.Put([]byte(u), []byte("password"))
+		err = b.Put([]byte(strconv.Itoa(u.ID)), data)
 		return err
 	})
+
+	return err
 }
 
 // listUsers returns a slice of all users

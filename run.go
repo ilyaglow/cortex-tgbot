@@ -25,7 +25,7 @@ func (c *Client) Run() {
 	for update := range updates {
 
 		if update.CallbackQuery != nil {
-			log.Printf("[%s] %s", update.CallbackQuery.Message.From.UserName, update.CallbackQuery.Message.Text)
+			log.Printf("username: %s, id: %d, text: %s", update.CallbackQuery.Message.From.UserName, update.CallbackQuery.Message.From.ID, update.CallbackQuery.Message.Text)
 			go func() {
 				if err := c.processCallback(update.CallbackQuery); err != nil {
 					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, err.Error())
@@ -40,13 +40,13 @@ func (c *Client) Run() {
 
 			if update.Message.IsCommand() &&
 				update.Message.Command() == "start" &&
-				!c.CheckAuth(update.Message.From.UserName) {
+				!c.CheckAuth(update.Message.From) {
 				msg.Text = "Enter your password"
 				go c.Bot.Send(msg)
 				continue
 			}
 
-			if c.CheckAuth(update.Message.From.UserName) {
+			if c.CheckAuth(update.Message.From) {
 				go func() {
 					if err := c.processMessage(update.Message); err != nil {
 						msg.Text = err.Error()
