@@ -53,7 +53,7 @@ func TestBuildTaxonomies(t *testing.T) {
 	}
 	txs = append(txs, tx2)
 
-	expected := fmt.Sprintf("%s:%s = %s, %s:%s = %s",
+	expected := fmt.Sprintf("%s:%s = %s\n%s:%s = %s",
 		tx1.Namespace, tx1.Predicate, tx1.Value,
 		tx2.Namespace, tx2.Predicate, tx2.Value,
 	)
