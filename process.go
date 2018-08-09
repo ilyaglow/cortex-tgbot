@@ -186,9 +186,8 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 
 	for _, t := range txs {
 		stats = append(stats, fmt.Sprintf("%s:%s = %v", t.Namespace, t.Predicate, t.Value))
-
 	}
-	return strings.Join(stats, ", ")
+	return strings.Join(stats, "\n")
 }
 
 // newArtifact makes an Artifact depends on its type
