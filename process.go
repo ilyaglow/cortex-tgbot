@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"time"
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/ilyaglow/go-cortex"
@@ -60,7 +59,7 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 
 	switch callback.Data {
 	case "all":
-		mul := c.Cortex.Analyzers.NewMultiRun(context.Background(), 5*time.Minute)
+		mul := c.Cortex.Analyzers.NewMultiRun(context.Background(), c.Timeout)
 		mul.OnReport = func(r *cortex.Report) {
 			err = c.sendReport(r, callback)
 			log.Println(err)
@@ -86,7 +85,7 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
 		go c.Bot.Send(edit)
 	default:
-		r, err := c.Cortex.Analyzers.Run(context.Background(), callback.Data, j, time.Minute*5)
+		r, err := c.Cortex.Analyzers.Run(context.Background(), callback.Data, j, c.Timeout)
 		if err != nil {
 			msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf("%s failed: %s", callback.Data, err.Error()))
 			msg.ReplyToMessageID = callback.Message.MessageID

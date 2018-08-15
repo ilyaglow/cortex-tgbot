@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"golang.org/x/net/proxy"
 
@@ -14,12 +15,15 @@ import (
 	"github.com/ilyaglow/telegram-bot-api"
 )
 
-// defaultTLP is Green because indicators reaching telegram servers
-// TODO: think about making it configurable
-const defaultTLP = 1
+const (
+	// defaultTLP is Green because indicators reaching telegram servers
+	// TODO: think about making it configurable
+	defaultTLP   = 1
+	boltFileName = "bolt.db"
+	bucket       = "users"
+)
 
-var boltFileName = "bolt.db"
-var bucket = "users"
+var defaultTimeout = 5 * time.Minute
 
 // Client defines bot's abilities to interact with services
 type Client struct {
@@ -29,6 +33,7 @@ type Client struct {
 	DB          *bolt.DB
 	UsersBucket string
 	TLP         int
+	Timeout     time.Duration
 }
 
 // socks5Client bootstraps http.Client that uses socks5 proxy
@@ -98,6 +103,20 @@ func NewClient() *Client {
 		return nil
 	})
 
+	var (
+		timeout time.Duration
+		errt    error
+	)
+	timeoutStr, ok := os.LookupEnv("TGBOT_TIMEOUT")
+	if !ok {
+		timeout = defaultTimeout
+	} else {
+		timeout, errt = time.ParseDuration(timeoutStr)
+		if errt != nil {
+			log.Fatal(errt)
+		}
+	}
+
 	return &Client{
 		Bot:         bot,
 		Cortex:      crtx,
@@ -105,5 +124,6 @@ func NewClient() *Client {
 		DB:          db,
 		UsersBucket: bucket,
 		TLP:         defaultTLP,
+		Timeout:     timeout,
 	}
 }
