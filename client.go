@@ -107,7 +107,7 @@ func NewClient() *Client {
 		timeout time.Duration
 		errt    error
 	)
-	timeoutStr, ok := os.LookupEnv("TGBOT_TIMEOUT")
+	timeoutStr, ok := os.LookupEnv("CORTEX_TIMEOUT")
 	if !ok {
 		timeout = defaultTimeout
 	} else {
