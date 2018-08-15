@@ -15,6 +15,7 @@ env:
   - PATH=/snap/bin:$PATH
 
 install:
+  - go get -d -v ./...
   - sudo snap install snapcraft --classic
 
 script:
