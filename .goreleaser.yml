@@ -1,8 +1,14 @@
 project_name: cortexbot
+brew:
+  repo: ilyaglow/cortex-tgbot
 builds:
 - env:
   - CGO_ENABLED=0
   main: ./cmd/cortexbot/main.go
+  oses:
+    - windows
+    - darwin
+    - linux
 archive:
   replacements:
     darwin: darwin
