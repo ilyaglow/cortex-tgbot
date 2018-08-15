@@ -1,0 +1,22 @@
+project_name: cortexbot
+builds:
+- env:
+  - CGO_ENABLED=0
+  main: ./cmd/cortexbot/main.go
+archive:
+  replacements:
+    darwin: darwin
+    linux: linux
+    windows: windows
+    386: i386
+    amd64: amd64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'

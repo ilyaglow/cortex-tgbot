@@ -5,29 +5,29 @@ go:
   - "1.10"
   - master
 
+addons:
+  apt:
+    packages:
+      - rpm
+      - snapd
+
+env:
+  - PATH=/snap/bin:$PATH
+
+install:
+  - go get -d -v ./...
+  - sudo snap install snapcraft --classic
+
 script:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
   - go test -v -covermode=count -coverprofile=coverage.out
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
 
-before_deploy:
-  - cd cmd/cortexbot
-  - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-amd64
-  - CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-386
-  - CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-x86.exe
-  - CGO_ENABLED=0 GOOS=darwin go build -ldflags="-s -w" -gcflags="-trimpath=$GOPATH" -asmflags="-trimpath=$GOPATH" -a -installsuffix cgo -o cortexbot-mac
-
 deploy:
-  provider: releases
-  api_key: $GITHUB_TOKEN
+  provider: script
   skip_cleanup: true
-  file:
-    - cortexbot-amd64
-    - cortexbot-386
-    - cortexbot-x86.exe
-    - cortexbot-mac
+  script: curl -sL https://git.io/goreleaser | bash
   on:
-    repo: ilyaglow/cortex-tgbot
     tags: true
     condition: $TRAVIS_GO_VERSION = "1.10"
