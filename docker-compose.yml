@@ -14,4 +14,4 @@ services:
       - ./bolt.db:/app/bolt.db
 
   cortex:
-    image: certbdf/cortex
+    image: thehiveproject/cortex
