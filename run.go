@@ -28,9 +28,7 @@ func (c *Client) Run() {
 			log.Printf("username: %s, id: %d, text: %s", update.CallbackQuery.Message.From.UserName, update.CallbackQuery.Message.From.ID, update.CallbackQuery.Message.Text)
 			go func() {
 				if err := c.processCallback(update.CallbackQuery); err != nil {
-					msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, err.Error())
-					msg.ReplyToMessageID = update.CallbackQuery.Message.MessageID
-					go c.Bot.Send(msg)
+					log.Println(err)
 				}
 			}()
 		} else {
@@ -49,8 +47,7 @@ func (c *Client) Run() {
 			if c.CheckAuth(update.Message.From) {
 				go func() {
 					if err := c.processMessage(update.Message); err != nil {
-						msg.Text = err.Error()
-						go c.Bot.Send(msg)
+						log.Println(err)
 					}
 				}()
 			} else {
