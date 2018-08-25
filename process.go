@@ -237,3 +237,26 @@ func newFileArtifactFromURL(link string, fname string, tlp int, client *http.Cli
 		Reader:   resp.Body,
 	}, nil
 }
+
+func (c *Client) availableDataTypes() (*tgbotapi.InlineKeyboardMarkup, error) {
+	dataTypes, err := c.Cortex.Analyzers.DataTypes(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(dataTypes)
+
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for _, n := range dataTypes {
+		var buttons []tgbotapi.InlineKeyboardButton
+		b := tgbotapi.NewInlineKeyboardButtonData(n, n)
+		buttons = append(buttons, b)
+		rows = append(rows, buttons)
+	}
+
+	rows = append(rows, []tgbotapi.InlineKeyboardButton{
+		tgbotapi.NewInlineKeyboardButtonData("Close", "close"),
+	})
+
+	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
+	return &markup, nil
+}
