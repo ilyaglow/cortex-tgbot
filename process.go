@@ -15,7 +15,7 @@ import (
 )
 
 // sendReport sends a report depends on success
-func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) error {
+func (c *Client) sendReport(r *cortex.Report, callback *tb.Callback) error {
 	if r.Status == "Failure" {
 		return fmt.Errorf("Analyzer %s failed with error message: %s", r.AnalyzerName, r.ReportBody.ErrorMessage)
 	}
@@ -37,7 +37,7 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 }
 
 // processCallback analyzes observables with a selected set of analyzers
-func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
+func (c *Client) processCallback(callback *tb.Callback) error {
 	var j cortex.Observable
 	var err error
 
