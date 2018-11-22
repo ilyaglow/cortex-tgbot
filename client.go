@@ -12,7 +12,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/ilyaglow/go-cortex"
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 const (
@@ -23,11 +23,14 @@ const (
 	bucket       = "users"
 )
 
-var defaultTimeout = 5 * time.Minute
+var (
+	pollTimeout   = 20 * time.Second
+	cortexTimeout = 5 * time.Minute
+)
 
 // Client defines bot's abilities to interact with services
 type Client struct {
-	Bot         *tgbotapi.BotAPI
+	Bot         *tb.Bot
 	Cortex      *cortex.Client
 	Password    string
 	DB          *bolt.DB
@@ -49,7 +52,7 @@ func socks5Client(u *url.URL) (*http.Client, error) {
 // NewClient bootstraps the Client struct from env variables
 func NewClient() *Client {
 	var (
-		bot *tgbotapi.BotAPI
+		bot *tb.Bot
 		err error
 	)
 
@@ -69,12 +72,23 @@ func NewClient() *Client {
 			log.Panic(err)
 		}
 
-		bot, err = tgbotapi.NewBotAPIWithClient(tgToken, sc)
+		bot, err = tb.NewBot(tb.Settings{
+			Token: tgToken,
+			Poller: &tb.LongPoller{
+				Timeout: pollTimeout,
+			},
+			Client: sc,
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		bot, err = tgbotapi.NewBotAPI(tgToken)
+		bot, err = tb.NewBot(tb.Settings{
+			Token: tgToken,
+			Poller: &tb.LongPoller{
+				Timeout: pollTimeout,
+			},
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -109,7 +123,7 @@ func NewClient() *Client {
 	)
 	timeoutStr, ok := os.LookupEnv("CORTEX_TIMEOUT")
 	if !ok {
-		timeout = defaultTimeout
+		timeout = cortexTimeout
 	} else {
 		timeout, errt = time.ParseDuration(timeoutStr)
 		if errt != nil {
