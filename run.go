@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 // Run represents infinite function that waits for a message,
@@ -12,14 +12,42 @@ import (
 func (c *Client) Run() {
 	defer c.DB.Close()
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	c.Bot.Handle(tb.OnCallback, func(m *tb.Callback) {
+		if !c.CheckAuth(m.Sender.ID) {
+			if err := c.Bot.Respond(m, &CallbackResponse{
+				CallbackID: m.ID,
+				Text:       "Something fishy going on here :)",
+			}); err != nil {
+				log.Println(err)
+			}
+			return
+		}
 
-	updates, err := c.Bot.GetUpdatesChan(u)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Authorized on account %s", c.Bot.Self.UserName)
+		go func() {
+			if err := c.processCallback(m); err != nil {
+				log.Println(err)
+			}
+		}()
+	})
+
+	c.Bot.Handle(tb.OnMessage, func(m *tb.Message) {
+		if !c.CheckAuth(m.Sender.ID) {
+			if err := c.Auth(m.Chat.ID, m.Sender.ID, m.Text); err != nil {
+				log.Println(err)
+			}
+			return
+		}
+		go func() {
+			if err := c.processMessage(m); err != nil {
+				log.Println(err)
+			}
+		}()
+	})
+
+	c.Bot.Handle(tb.OnDocument, func(m *tb.Message) {
+
+	})
+
 	log.Printf("Users in database: %s", strings.Join(c.listUsers(), ","))
 
 	for update := range updates {
