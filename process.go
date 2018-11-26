@@ -1,6 +1,7 @@
 package cortexbot
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/ilyaglow/go-cortex"
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 // sendReport sends a report depends on success
@@ -23,17 +24,14 @@ func (c *Client) sendReport(r *cortex.Report, callback *tb.Callback) error {
 	// Send JSON file with full report and taxonomies
 	tr, _ := json.MarshalIndent(r, "", "  ")
 
-	fb := tgbotapi.FileBytes{
-		Name:  fmt.Sprintf("%s-%s.json", r.AnalyzerName, r.ID),
-		Bytes: tr,
+	fb := &tb.Document{
+		File:     tb.FromReader(bytes.NewReader(tr)),
+		FileName: fmt.Sprintf("%s-%s.json", r.AnalyzerName, r.ID),
+		Caption:  buildTaxonomies(r.Taxonomies()),
 	}
 
-	attachment := tgbotapi.NewDocumentUpload(callback.Message.Chat.ID, fb)
-	attachment.ReplyToMessageID = callback.Message.ReplyToMessage.MessageID
-	attachment.Caption = buildTaxonomies(r.Taxonomies())
-	go c.Bot.Send(attachment)
-
-	return nil
+	_, err := c.Bot.Reply(callback.Message.ReplyTo, fb)
+	return err
 }
 
 // processCallback analyzes observables with a selected set of analyzers
@@ -41,20 +39,20 @@ func (c *Client) processCallback(callback *tb.Callback) error {
 	var j cortex.Observable
 	var err error
 
-	if callback.Message.ReplyToMessage.Document != nil {
-		link, err := c.Bot.GetFileDirectURL(callback.Message.ReplyToMessage.Document.FileID)
+	if callback.Message.ReplyTo.Document != nil {
+		link, err := c.Bot.FileURLByID(callback.Message.ReplyTo.Document.FileID)
 		if err != nil {
 			log.Println("Can't get direct link to file")
 			return err
 		}
 
-		j, err = newFileArtifactFromURL(link, callback.Message.ReplyToMessage.Document.FileName, c.TLP, c.Bot.Client)
+		j, err = newFileArtifactFromURL(link, callback.Message.ReplyTo.Document.FileName, c.TLP, c.BotSettings.Client)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
 	} else {
-		j = newArtifact(callback.Message.ReplyToMessage.Text, c.TLP)
+		j = newArtifact(callback.Message.ReplyTo.Text, c.TLP)
 	}
 
 	switch callback.Data {
@@ -75,37 +73,34 @@ func (c *Client) processCallback(callback *tb.Callback) error {
 		}
 	case "close":
 		kb := showButton()
-		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		go c.Bot.Send(edit)
+		if _, err := c.Bot.Edit(callback.Message, kb); err != nil {
+			return err
+		}
 	case "show":
-		kb, err := c.analyzersButtons(dataType(callback.Message.ReplyToMessage.Text))
+		kb, err := c.analyzersButtons(dataType(callback.Message.ReplyTo.Text))
 		if err != nil {
 			return err
 		}
-		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		go c.Bot.Send(edit)
+		if _, err := c.Bot.Edit(callback.Message, kb); err != nil {
+			return err
+		}
 	default:
 		r, err := c.Cortex.Analyzers.Run(context.Background(), callback.Data, j, c.Timeout)
 		if err != nil {
-			msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf("%s failed: %s", callback.Data, err.Error()))
-			msg.ReplyToMessageID = callback.Message.MessageID
-			c.Bot.Send(msg)
-		} else {
-			err = c.sendReport(r, callback)
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("%s failed: %s", callback.Data, err.Error())
+		}
+
+		err = c.sendReport(r, callback)
+		if err != nil {
+			return err
 		}
 	}
-
-	cbcfg := tgbotapi.NewCallback(callback.ID, "")
-	go c.Bot.AnswerCallbackQuery(cbcfg)
 
 	return nil
 }
 
 // analyzersButtons returns a markup of analyzers as buttons
-func (c *Client) analyzersButtons(datatype string) (*tgbotapi.InlineKeyboardMarkup, error) {
+func (c *Client) analyzersButtons(datatype string) (*tb.InlineKeyboardMarkup, error) {
 	analyzers, _, err := c.Cortex.Analyzers.ListByType(context.Background(), datatype)
 	if err != nil {
 		return nil, err
@@ -117,46 +112,54 @@ func (c *Client) analyzersButtons(datatype string) (*tgbotapi.InlineKeyboardMark
 	}
 	sort.Strings(names)
 
-	var rows [][]tgbotapi.InlineKeyboardButton
-	rows = append(rows, []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("All", "all"),
+	var rows [][]tb.InlineButton
+	rows = append(rows, []tb.InlineButton{
+		tb.InlineButton{
+			Text: "All",
+			Data: "all",
+		},
 	})
 
 	for _, n := range names {
-		var buttons []tgbotapi.InlineKeyboardButton
-		b := tgbotapi.NewInlineKeyboardButtonData(n, n)
-		buttons = append(buttons, b)
-		rows = append(rows, buttons)
+		rows = append(rows, []tb.InlineButton{
+			tb.InlineButton{
+				Text: n,
+				Data: n,
+			},
+		})
 	}
 
-	rows = append(rows, []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("Close", "close"),
-	})
+	// rows = append(rows, []tb.InlineButton{
+	// 	tb.InlineButton{
+	// 		Text: "Close",
+	// 		Data: "close",
+	// 	},
+	// })
 
-	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
-	return &markup, nil
+	return &tb.InlineKeyboardMarkup{rows}, nil
 }
 
 // showButton returns only one button, used on close callback
-func showButton() *tgbotapi.InlineKeyboardMarkup {
-	var rows [][]tgbotapi.InlineKeyboardButton
-	rows = append(rows, []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("Show", "show"),
-	})
-
-	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
-	return &markup
+func showButton() *tb.InlineKeyboardMarkup {
+	var rows [][]tb.InlineButton
+	return &tb.InlineKeyboardMarkup{
+		InlineKeyboard: append(rows, []tb.InlineButton{
+			tb.InlineButton{
+				Text: "Show",
+				Data: "show",
+			},
+		}),
+	}
 }
 
 // processMessage asks Cortex about data submitted by a user
-func (c *Client) processMessage(input *tgbotapi.Message) error {
-	var err error
+func (c *Client) processMessage(input *tb.Message) error {
+	var (
+		err error
+		dt  string
+	)
 
-	msg := tgbotapi.NewMessage(input.Chat.ID, "Select analyzer to run. Choose <All> to run all of them.")
-	msg.ReplyToMessageID = input.MessageID
-
-	bmarkup := &tgbotapi.InlineKeyboardMarkup{}
-	var dt string
+	bmarkup := &tb.InlineKeyboardMarkup{}
 
 	if input.Document != nil {
 		dt = "file"
@@ -168,14 +171,11 @@ func (c *Client) processMessage(input *tgbotapi.Message) error {
 	if err != nil {
 		return err
 	}
-	msg.ReplyMarkup = bmarkup
 
-	_, err = c.Bot.Send(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err = c.Bot.Reply(input, "Select analyzer to run. Choose <All> to run all of them.", &tb.ReplyMarkup{
+		InlineKeyboard: bmarkup.InlineKeyboard,
+	})
+	return err
 }
 
 // buildTaxonomies joins taxonomies in one formatted string
@@ -238,25 +238,29 @@ func newFileArtifactFromURL(link string, fname string, tlp int, client *http.Cli
 	}, nil
 }
 
-func (c *Client) availableDataTypes() (*tgbotapi.InlineKeyboardMarkup, error) {
+func (c *Client) availableDataTypes() (*tb.InlineKeyboardMarkup, error) {
 	dataTypes, err := c.Cortex.Analyzers.DataTypes(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	sort.Strings(dataTypes)
 
-	var rows [][]tgbotapi.InlineKeyboardButton
+	var rows [][]tb.InlineButton
 	for _, n := range dataTypes {
-		var buttons []tgbotapi.InlineKeyboardButton
-		b := tgbotapi.NewInlineKeyboardButtonData(n, n)
-		buttons = append(buttons, b)
-		rows = append(rows, buttons)
+		rows = append(rows, []tb.InlineButton{
+			tb.InlineButton{
+				Text: n,
+				Data: n,
+			},
+		})
 	}
 
-	rows = append(rows, []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("Close", "close"),
+	rows = append(rows, []tb.InlineButton{
+		tb.InlineButton{
+			Text: "Close",
+			Data: "close",
+		},
 	})
 
-	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
-	return &markup, nil
+	return &tb.InlineKeyboardMarkup{rows}, nil
 }

@@ -6,6 +6,5 @@ import (
 
 func main() {
 	c := cortexbot.NewClient()
-	c.Bot.Debug = true
 	c.Run()
 }

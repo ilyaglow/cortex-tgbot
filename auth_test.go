@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 func TestCheckAuth(t *testing.T) {
@@ -13,17 +13,17 @@ func TestCheckAuth(t *testing.T) {
 	defer os.Remove("test.db")
 
 	var authtest = []struct {
-		u           *tgbotapi.User
+		u           *tb.User
 		checkString string
 	}{
 		{
-			&tgbotapi.User{
+			&tb.User{
 				ID:        1000,
 				FirstName: "Name",
-				UserName:  "user1",
+				Username:  "user1",
 			}, strconv.Itoa(1000)},
 		{
-			&tgbotapi.User{
+			&tb.User{
 				ID:        2000,
 				FirstName: "Name2",
 			}, strconv.Itoa(2000)},
@@ -34,13 +34,12 @@ func TestCheckAuth(t *testing.T) {
 			t.Error(err)
 		}
 
-		if !c.CheckAuth(at.u) {
+		if !c.CheckAuth(at.u.ID) {
 			t.Errorf("check auth for %v failed", at.u)
 		}
 	}
 
-	if c.CheckAuth(&tgbotapi.User{
-		ID: 4000}) {
+	if c.CheckAuth(9999) {
 		t.Error("Non-existent user bypassed auth check")
 	}
 }

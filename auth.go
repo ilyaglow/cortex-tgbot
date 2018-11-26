@@ -5,32 +5,32 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 // Auth handles simple password authentication of a user
-func (c *Client) Auth(chatID, userID int, password string) error {
+func (c *Client) Auth(m *tb.Message) error {
 	var message string
-	if password == c.Password {
-		err := c.registerUser(userID)
+	if m.Text == c.Password {
+		err := c.registerUser(m.Sender)
 		if err != nil {
 			return err
 		}
-		log.Printf("New user %s was registered!\nAllowed users: %s", userID, strings.Join(c.listUsers(), ","))
+		log.Printf("New user %s was registered!\nAllowed users: %s", m.Sender.Username, strings.Join(c.listUsers(), ","))
 		message = "Successfully authenticated"
 	} else {
 		message = "Wrong password"
 	}
 
-	if err := c.Bot.Send(&tb.Chat{chatID}, message); err != nil {
+	if _, err := c.Bot.Reply(m, message); err != nil {
 		return err
 	}
 	return nil
 }
 
 // CheckAuth checks if user is allowed to interact with a bot
-func (c *Client) CheckAuth(u *tgbotapi.User) bool {
-	if c.userExists(strconv.Itoa(u.ID)) {
+func (c *Client) CheckAuth(uid int) bool {
+	if c.userExists(strconv.Itoa(uid)) {
 		return true
 	}
 	return false

@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	"github.com/boltdb/bolt"
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 // registerUser adds a user to boltdb bucket
-func (c *Client) registerUser(u *tgbotapi.User) error {
+func (c *Client) registerUser(u *tb.User) error {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return err

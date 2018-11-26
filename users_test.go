@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/boltdb/bolt"
-	"github.com/ilyaglow/telegram-bot-api"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 func mockupClient() *Client {
@@ -37,13 +37,13 @@ func TestUser(t *testing.T) {
 	defer os.Remove("test.db")
 
 	var usertests = []struct {
-		u  *tgbotapi.User
+		u  *tb.User
 		id string
 	}{
-		{&tgbotapi.User{
+		{&tb.User{
 			ID: 10000,
 		}, strconv.Itoa(10000)},
-		{&tgbotapi.User{
+		{&tb.User{
 			ID: 20000,
 		}, strconv.Itoa(20000)},
 	}
