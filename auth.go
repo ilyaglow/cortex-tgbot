@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // Auth handles simple password authentication of a user
@@ -23,7 +23,9 @@ func (c *Client) Auth(input *tgbotapi.Message) {
 	} else {
 		msg.Text = "Wrong password"
 	}
-	c.Bot.Send(msg)
+	if _, err := c.Bot.Send(msg); err != nil {
+		log.Println(err)
+	}
 }
 
 // CheckAuth checks if user is allowed to interact with a bot

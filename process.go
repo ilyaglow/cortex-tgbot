@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	valid "github.com/asaskevich/govalidator"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/ilyaglow/go-cortex"
-	"github.com/ilyaglow/telegram-bot-api"
 )
 
 // sendReport sends a report depends on success
@@ -31,9 +31,9 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 	attachment := tgbotapi.NewDocumentUpload(callback.Message.Chat.ID, fb)
 	attachment.ReplyToMessageID = callback.Message.ReplyToMessage.MessageID
 	attachment.Caption = buildTaxonomies(r.Taxonomies())
-	go c.Bot.Send(attachment)
 
-	return nil
+	_, err := c.Bot.Send(attachment)
+	return err
 }
 
 // processCallback analyzes observables with a selected set of analyzers
@@ -76,20 +76,26 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 	case "close":
 		kb := showButton()
 		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		go c.Bot.Send(edit)
+		if _, err := c.Bot.Send(edit); err != nil {
+			return err
+		}
 	case "show":
 		kb, err := c.analyzersButtons(dataType(callback.Message.ReplyToMessage.Text))
 		if err != nil {
 			return err
 		}
 		edit := tgbotapi.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, *kb)
-		go c.Bot.Send(edit)
+		if _, err := c.Bot.Send(edit); err != nil {
+			return err
+		}
 	default:
 		r, err := c.Cortex.Analyzers.Run(context.Background(), callback.Data, j, c.Timeout)
 		if err != nil {
 			msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf("%s failed: %s", callback.Data, err.Error()))
 			msg.ReplyToMessageID = callback.Message.MessageID
-			c.Bot.Send(msg)
+			if _, err := c.Bot.Send(msg); err != nil {
+				return err
+			}
 		} else {
 			err = c.sendReport(r, callback)
 			if err != nil {
@@ -97,10 +103,6 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 			}
 		}
 	}
-
-	cbcfg := tgbotapi.NewCallback(callback.ID, "")
-	go c.Bot.AnswerCallbackQuery(cbcfg)
-
 	return nil
 }
 

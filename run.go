@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // Run represents infinite function that waits for a message,
@@ -30,6 +30,10 @@ func (c *Client) Run() {
 				if err := c.processCallback(update.CallbackQuery); err != nil {
 					log.Println(err)
 				}
+				cbcfg := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
+				if _, err := c.Bot.AnswerCallbackQuery(cbcfg); err != nil {
+					log.Println(err)
+				}
 			}()
 		} else {
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -40,7 +44,9 @@ func (c *Client) Run() {
 				update.Message.Command() == "start" &&
 				!c.CheckAuth(update.Message.From) {
 				msg.Text = "Enter your password"
-				go c.Bot.Send(msg)
+				if _, err := c.Bot.Send(msg); err != nil {
+					log.Println(err)
+				}
 				continue
 			}
 

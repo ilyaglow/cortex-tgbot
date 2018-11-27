@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ilyaglow/telegram-bot-api"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func TestCheckAuth(t *testing.T) {

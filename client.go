@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/boltdb/bolt"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/ilyaglow/go-cortex"
-	"github.com/ilyaglow/telegram-bot-api"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/boltdb/bolt"
-	"github.com/ilyaglow/telegram-bot-api"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // registerUser adds a user to boltdb bucket
