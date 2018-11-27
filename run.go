@@ -7,7 +7,7 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const defaultTimeout = 20
+const defaultPollTimeout = 20
 
 // Run represents infinite function that waits for a message,
 // authenticate user and process task
@@ -15,7 +15,7 @@ func (c *Client) Run() {
 	defer c.DB.Close()
 
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = defaultTimeout
+	u.Timeout = defaultPollTimeout
 
 	updates, err := c.Bot.GetUpdatesChan(u)
 	if err != nil {
@@ -59,7 +59,9 @@ func (c *Client) Run() {
 					}
 				}()
 			} else {
-				c.Auth(update.Message)
+				if err := c.Auth(update.Message); err != nil {
+					log.Println(err)
+				}
 			}
 		}
 	}

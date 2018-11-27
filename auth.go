@@ -9,13 +9,13 @@ import (
 )
 
 // Auth handles simple password authentication of a user
-func (c *Client) Auth(input *tgbotapi.Message) {
+func (c *Client) Auth(input *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(input.Chat.ID, "")
 	msg.ReplyToMessageID = input.MessageID
 	if input.Text == c.Password {
 		err := c.registerUser(input.From)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		log.Printf("Allowed users: %s", strings.Join(c.listUsers(), ","))
@@ -24,8 +24,10 @@ func (c *Client) Auth(input *tgbotapi.Message) {
 		msg.Text = "Wrong password"
 	}
 	if _, err := c.Bot.Send(msg); err != nil {
-		log.Println(err)
+		return err
 	}
+
+	return nil
 }
 
 // CheckAuth checks if user is allowed to interact with a bot
