@@ -2,6 +2,7 @@ package cortexbot
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -18,12 +19,28 @@ import (
 const (
 	// defaultTLP is Green because indicators reaching telegram servers
 	// TODO: think about making it configurable
-	defaultTLP   = 1
-	boltFileName = "bolt.db"
-	bucket       = "users"
+	defaultTLP           = 1
+	boltFileName         = "bolt.db"
+	bucket               = "users"
+	tgTokenEnvName       = "TGBOT_API_TOKEN"
+	cortexURLEnvName     = "CORTEX_URL"
+	cortexAPIKeyEnvName  = "CORTEX_API_KEY"
+	socksURLEnvName      = "SOCKS5_URL"
+	cortexBotPWEnvName   = "CORTEX_BOT_PASSWORD"
+	cortexTimeoutEnvName = "CORTEX_TIMEOUT"
 )
 
-var defaultTimeout = 5 * time.Minute
+var (
+	pollTimeout   = 20 * time.Second
+	cortexTimeout = 5 * time.Minute
+
+	tgTokenEnvValue       = os.Getenv(tgTokenEnvName)
+	cortexURLEnvValue     = os.Getenv(cortexURLEnvName)
+	cortexAPIKeyEnvValue  = os.Getenv(cortexAPIKeyEnvName)
+	cortexBotPWEnvValue   = os.Getenv(cortexBotPWEnvName)
+	socksURLEnvValue      = os.Getenv(socksURLEnvName)
+	cortexTimeoutEnvValue = os.Getenv(cortexTimeoutEnvName)
+)
 
 // Client defines bot's abilities to interact with services
 type Client struct {
@@ -34,6 +51,28 @@ type Client struct {
 	UsersBucket string
 	TLP         int
 	Timeout     time.Duration
+	Debug       bool
+}
+
+func usage() {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf(`Usage:
+	%s=<telegram bot token> \
+	%s=<cortex location> \
+	%s=<cortex API key> \
+	%s=<cortex bot passphrase> \
+	%s
+`, tgTokenEnvName, cortexURLEnvName, cortexAPIKeyEnvName, cortexBotPWEnvName, ex)
+	os.Exit(1)
+}
+
+func (c *Client) log(v ...interface{}) {
+	if c.Debug {
+		log.Println(v...)
+	}
 }
 
 // socks5Client bootstraps http.Client that uses socks5 proxy
@@ -53,43 +92,42 @@ func NewClient() *Client {
 		err error
 	)
 
-	tgToken, ok := os.LookupEnv("TGBOT_API_TOKEN")
-	if !ok {
-		log.Fatal("TGBOT_API_TOKEN environment variable is not set")
+	if tgTokenEnvValue == "" || cortexURLEnvValue == "" || cortexAPIKeyEnvValue == "" || cortexBotPWEnvValue == "" {
+		usage()
 	}
 
-	if proxy, ok := os.LookupEnv("SOCKS5_URL"); ok {
-		surl, err := url.Parse(proxy)
+	if socksURLEnvValue != "" {
+		surl, err := url.Parse(socksURLEnvValue)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 
 		sc, err := socks5Client(surl)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 
-		bot, err = tgbotapi.NewBotAPIWithClient(tgToken, sc)
+		bot, err = tgbotapi.NewBotAPIWithClient(tgTokenEnvValue, sc)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		bot, err = tgbotapi.NewBotAPI(tgToken)
+		bot, err = tgbotapi.NewBotAPI(tgTokenEnvValue)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	crtx, err := cortex.NewClient(os.Getenv("CORTEX_LOCATION"), &cortex.ClientOpts{
+	crtx, err := cortex.NewClient(cortexURLEnvValue, &cortex.ClientOpts{
 		Auth: &cortex.APIAuth{
-			APIKey: os.Getenv("CORTEX_API_KEY"),
+			APIKey: cortexAPIKeyEnvValue,
 		},
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := bolt.Open("bolt.db", 0644, nil)
+	db, err := bolt.Open(boltFileName, 0644, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,29 +136,23 @@ func NewClient() *Client {
 	db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
-			return errors.New("Create users bucket failed")
+			return errors.New("create users bucket failed")
 		}
 		return nil
 	})
 
-	var (
-		timeout time.Duration
-		errt    error
-	)
-	timeoutStr, ok := os.LookupEnv("CORTEX_TIMEOUT")
-	if !ok {
-		timeout = defaultTimeout
-	} else {
-		timeout, errt = time.ParseDuration(timeoutStr)
-		if errt != nil {
-			log.Fatal(errt)
+	timeout := cortexTimeout
+	if cortexTimeoutEnvValue != "" {
+		timeout, err = time.ParseDuration(cortexTimeoutEnvValue)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 
 	return &Client{
 		Bot:         bot,
 		Cortex:      crtx,
-		Password:    os.Getenv("CORTEX_BOT_PASSWORD"),
+		Password:    cortexBotPWEnvValue,
 		DB:          db,
 		UsersBucket: bucket,
 		TLP:         defaultTLP,
