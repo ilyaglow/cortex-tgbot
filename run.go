@@ -45,6 +45,7 @@ func (c *Client) Run() {
 			if update.Message.IsCommand() &&
 				update.Message.Command() == "start" &&
 				!c.CheckAuth(update.Message.From) {
+				c.log("run: new unauthorized user")
 				msg.Text = "Enter your password"
 				if _, err := c.Bot.Send(msg); err != nil {
 					log.Println(err)
@@ -53,12 +54,14 @@ func (c *Client) Run() {
 			}
 
 			if c.CheckAuth(update.Message.From) {
+				c.log("run: auth succeeded")
 				go func() {
 					if err := c.processMessage(update.Message); err != nil {
 						log.Println(err)
 					}
 				}()
 			} else {
+				c.log("run: wrong password from the user")
 				if err := c.Auth(update.Message); err != nil {
 					log.Println(err)
 				}
