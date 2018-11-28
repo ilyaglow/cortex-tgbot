@@ -6,12 +6,12 @@ services:
     depends_on:
       - cortex
     environment:
-      TGBOT_API_TOKEN: "BOTFATHER_TOKEN"
-      CORTEX_LOCATION: "http://cortex"
-      CORTEX_BOT_PASSWORD: "YOUR_CORTEX_PASSPHRASE"
+      TGBOT_API_TOKEN: ${TGBOT_API_TOKEN}
+      CORTEX_URL: ${CORTEX_URL}
+      CORTEX_API_KEY: ${CORTEX_API_KEY}
+      CORTEX_BOT_PASSWORD: ${CORTEX_BOT_PASSWORD}
     volumes:
-      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
-      - ./bolt.db:/app/bolt.db
+      - ./bolt.db:/app/data/bolt.db
 
   cortex:
     image: thehiveproject/cortex

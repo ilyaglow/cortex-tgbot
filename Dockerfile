@@ -1,19 +1,21 @@
 FROM alpine:latest
-LABEL maintainer "contact@ilyaglotov.com"
-LABEL repository "https://github.com/ilyaglow/cortex-tgbot"
+LABEL maintainer="contact@ilyaglotov.com" \
+      repository="https://github.com/ilyaglow/cortex-tgbot"
 
-ENV CORTEXBOT_VERSION "0.9.3"
-ADD https://github.com/ilyaglow/cortex-tgbot/releases/download/v${CORTEXTBOT_VERSION}/cortexbot_linux_amd64.tar.gz /app/
-
-RUN chmod +x /app/cortexbot
-
-RUN adduser -D app \
+ENV CORTEXBOT_VERSION "0.9.5"
+RUN apk --update --no-cache add ca-certificates \
+  && mkdir app \
+  && wget -O /app/cortexbot.tar.gz https://github.com/ilyaglow/cortex-tgbot/releases/download/v${CORTEXBOT_VERSION}/cortexbot_${CORTEXBOT_VERSION}_linux_amd64.tar.gz \
+  && cd /app \
+  && tar xzf cortexbot.tar.gz \
+  && chmod +x /app/cortexbot \
+  && adduser -D app \
   && chown -R app /app
 
 USER app
 
 VOLUME /app
 
-WORKDIR /app
+WORKDIR /app/data
 
-ENTRYPOINT ["./cortexbot"]
+ENTRYPOINT ["../cortexbot"]
