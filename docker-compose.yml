@@ -11,7 +11,7 @@ services:
       CORTEX_API_KEY: ${CORTEX_API_KEY}
       CORTEX_BOT_PASSWORD: ${CORTEX_BOT_PASSWORD}
     volumes:
-      - ./bolt.db:/app/data/bolt.db
+      - ./data/:/app/data/
 
   cortex:
     image: thehiveproject/cortex
