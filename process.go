@@ -152,12 +152,9 @@ func showButton() *tgbotapi.InlineKeyboardMarkup {
 
 // processMessage asks Cortex about data submitted by a user
 func (c *Client) processMessage(input *tgbotapi.Message) error {
-	var err error
-
 	msg := tgbotapi.NewMessage(input.Chat.ID, "Select analyzer to run. Choose <All> to run all of them.")
 	msg.ReplyToMessageID = input.MessageID
 
-	bmarkup := &tgbotapi.InlineKeyboardMarkup{}
 	var dt string
 
 	if input.Document != nil {
@@ -166,7 +163,7 @@ func (c *Client) processMessage(input *tgbotapi.Message) error {
 		dt = dataType(input.Text)
 	}
 
-	bmarkup, err = c.analyzersButtons(dt)
+	bmarkup, err := c.analyzersButtons(dt)
 	if err != nil {
 		return err
 	}
