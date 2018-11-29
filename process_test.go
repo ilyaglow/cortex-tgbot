@@ -10,20 +10,20 @@ import (
 func TestObservableConstructor(t *testing.T) {
 	var cases = []struct {
 		data     string
-		tlp      int
+		tlp, pap int
 		dataType string
 	}{
-		{"1.1.1.1", 0, "ip"},
-		{"https://subdomain.domain.com/route/query?param=val", 1, "url"},
-		{"subdomain.domain.com", 2, "domain"},
-		{"email.address@domain.com", 3, "mail"},
-		{"email+address@domain.com", 3, "mail"},
-		{"a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", 0, "hash"},
-		{"randomdata", 1, "other"},
+		{"1.1.1.1", 0, 0, "ip"},
+		{"https://subdomain.domain.com/route/query?param=val", 1, 1, "url"},
+		{"subdomain.domain.com", 2, 2, "domain"},
+		{"email.address@domain.com", 3, 3, "mail"},
+		{"email+address@domain.com", 3, 3, "mail"},
+		{"a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", 0, 0, "hash"},
+		{"randomdata", 1, 1, "other"},
 	}
 
 	for _, c := range cases {
-		a := newArtifact(c.data, c.tlp)
+		a := newArtifact(c.data, c.tlp, c.pap)
 		if a.Description() != c.data {
 			t.Errorf("need %s, got %s", c.data, a.Description())
 		}
