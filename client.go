@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"golang.org/x/net/proxy"
@@ -28,6 +29,7 @@ const (
 	socksURLEnvName      = "SOCKS5_URL"
 	cortexBotPWEnvName   = "CORTEX_BOT_PASSWORD"
 	cortexTimeoutEnvName = "CORTEX_TIMEOUT"
+	debugEnvName         = "CORTEX_BOT_DEBUG"
 )
 
 var (
@@ -40,6 +42,7 @@ var (
 	cortexBotPWEnvValue   = os.Getenv(cortexBotPWEnvName)
 	socksURLEnvValue      = os.Getenv(socksURLEnvName)
 	cortexTimeoutEnvValue = os.Getenv(cortexTimeoutEnvName)
+	debugEnvValue         = os.Getenv(debugEnvName)
 )
 
 // Client defines bot's abilities to interact with services
@@ -149,6 +152,12 @@ func NewClient() *Client {
 		}
 	}
 
+	var debug bool
+	debug, err = strconv.ParseBool(debugEnvValue)
+	if err != nil {
+		debug = false
+	}
+
 	return &Client{
 		Bot:         bot,
 		Cortex:      crtx,
@@ -157,5 +166,6 @@ func NewClient() *Client {
 		UsersBucket: bucket,
 		TLP:         defaultTLP,
 		Timeout:     timeout,
+		Debug:       debug,
 	}
 }
