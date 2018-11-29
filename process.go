@@ -48,13 +48,13 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 			return err
 		}
 
-		j, err = newFileArtifactFromURL(link, callback.Message.ReplyToMessage.Document.FileName, c.TLP, c.Bot.Client)
+		j, err = newFileArtifactFromURL(link, callback.Message.ReplyToMessage.Document.FileName, c.TLP, c.PAP, c.Bot.Client)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
 	} else {
-		j = newArtifact(callback.Message.ReplyToMessage.Text, c.TLP)
+		j = newArtifact(callback.Message.ReplyToMessage.Text, c.TLP, c.PAP)
 	}
 
 	switch callback.Data {
@@ -189,11 +189,12 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 }
 
 // newArtifact makes an Artifact depends on its type
-func newArtifact(s string, tlp int) cortex.Observable {
+func newArtifact(s string, tlp, pap int) cortex.Observable {
 	return &cortex.Task{
 		Data:     s,
 		DataType: dataType(s),
 		TLP:      &tlp,
+		PAP:      &pap,
 	}
 }
 
@@ -216,7 +217,7 @@ func dataType(d string) (t string) {
 }
 
 // newFileArtifactFromURL makes a FileArtifact from URL
-func newFileArtifactFromURL(link string, fname string, tlp int, client *http.Client) (cortex.Observable, error) {
+func newFileArtifactFromURL(link, fname string, tlp, pap int, client *http.Client) (cortex.Observable, error) {
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		return nil, err
@@ -231,6 +232,7 @@ func newFileArtifactFromURL(link string, fname string, tlp int, client *http.Cli
 		FileTaskMeta: cortex.FileTaskMeta{
 			DataType: "file",
 			TLP:      &tlp,
+			PAP:      &pap,
 		},
 		FileName: fname,
 		Reader:   resp.Body,

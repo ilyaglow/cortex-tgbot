@@ -18,9 +18,11 @@ import (
 )
 
 const (
-	// defaultTLP is Green because indicators reaching telegram servers
+	// defaultTLP is Green because indicators reaching telegram servers.
+	// Same for defaultPAP
 	// TODO: think about making it configurable
 	defaultTLP           = 1
+	defaultPAP           = 1
 	boltFileName         = "bolt.db"
 	bucket               = "users"
 	tgTokenEnvName       = "TGBOT_API_TOKEN"
@@ -52,7 +54,7 @@ type Client struct {
 	Password    string
 	DB          *bolt.DB
 	UsersBucket string
-	TLP         int
+	TLP, PAP    int
 	Timeout     time.Duration
 	Debug       bool
 }
@@ -165,6 +167,7 @@ func NewClient() *Client {
 		DB:          db,
 		UsersBucket: bucket,
 		TLP:         defaultTLP,
+		PAP:         defaultPAP,
 		Timeout:     timeout,
 		Debug:       debug,
 	}
