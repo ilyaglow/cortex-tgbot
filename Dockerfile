@@ -1,20 +1,29 @@
-FROM alpine:latest
+FROM golang:alpine as build
 LABEL maintainer="contact@ilyaglotov.com" \
       repository="https://github.com/ilyaglow/cortex-tgbot"
 
-ENV CORTEXBOT_VERSION "0.9.6"
+COPY cmd/cortexbot/main.go /go/src/cortexbot/main.go
+
 RUN apk --update --no-cache add ca-certificates \
-  && mkdir app \
-  && wget -O /app/cortexbot.tar.gz https://github.com/ilyaglow/cortex-tgbot/releases/download/v${CORTEXBOT_VERSION}/cortexbot_${CORTEXBOT_VERSION}_linux_amd64.tar.gz \
-  && cd /app \
-  && tar xzf cortexbot.tar.gz \
-  && chmod +x /app/cortexbot \
-  && adduser -D app \
+                                git \
+  && cd /go/src/cortexbot/ \
+  && go get -t . \
+  && CGO_ENABLED=0 go build -ldflags="-s -w" \
+                            -a \
+                            -installsuffix static \
+                            -o /cortexbot
+
+FROM alpine:latest
+COPY --from=build /cortexbot /app/cortexbot
+
+RUN apk --update --no-cache add ca-certificates \
+  && adduser -h /app -D app \
+  && mkdir -p /app/data \
   && chown -R app /app
 
 USER app
 
-VOLUME /app
+VOLUME /app/data
 
 WORKDIR /app/data
 
