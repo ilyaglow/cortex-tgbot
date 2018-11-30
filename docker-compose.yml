@@ -9,5 +9,6 @@ services:
       CORTEX_API_KEY: ${CORTEX_API_KEY}
       CORTEX_BOT_PASSWORD: ${CORTEX_BOT_PASSWORD}
       SOCKS5_URL: ${SOCKS5_URL}
+      CORTEX_BOT_DEBUG: ${CORTEX_BOT_DEBUG}
     volumes:
       - ./data/:/app/data/
