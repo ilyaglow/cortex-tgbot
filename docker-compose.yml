@@ -3,8 +3,6 @@ services:
   bot:
     restart: always
     build: .
-    depends_on:
-      - cortex
     environment:
       TGBOT_API_TOKEN: ${TGBOT_API_TOKEN}
       CORTEX_URL: ${CORTEX_URL}
@@ -12,6 +10,3 @@ services:
       CORTEX_BOT_PASSWORD: ${CORTEX_BOT_PASSWORD}
     volumes:
       - ./data/:/app/data/
-
-  cortex:
-    image: thehiveproject/cortex
