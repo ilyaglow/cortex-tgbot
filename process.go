@@ -36,6 +36,49 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 	return err
 }
 
+func (c *Client) process(update *tgbotapi.Update) error {
+	if update.CallbackQuery != nil {
+		log.Printf(
+			"username: %s, id: %d, text: %s",
+			update.CallbackQuery.Message.From.UserName,
+			update.CallbackQuery.Message.From.ID,
+			update.CallbackQuery.Message.Text,
+		)
+		if err := c.processCallback(update.CallbackQuery); err != nil {
+			return err
+		}
+
+		cbcfg := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
+		_, err := c.Bot.AnswerCallbackQuery(cbcfg)
+		return err
+	}
+
+	log.Printf(
+		"[%s] %s",
+		update.Message.From.UserName,
+		update.Message.Text,
+	)
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	msg.ReplyToMessageID = update.Message.MessageID
+
+	if update.Message.IsCommand() &&
+		update.Message.Command() == "start" &&
+		!c.CheckAuth(update.Message.From) {
+
+		msg.Text = "Enter your password"
+		_, err := c.Bot.Send(msg)
+		return err
+	}
+
+	if c.CheckAuth(update.Message.From) {
+		err := c.processMessage(update.Message)
+		return err
+	}
+
+	err := c.Auth(update.Message)
+	return err
+}
+
 // processCallback analyzes observables with a selected set of analyzers
 func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 	var j cortex.Observable
