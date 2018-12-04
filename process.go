@@ -36,7 +36,7 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 	return err
 }
 
-func (c *Client) process(update *tgbotapi.Update) error {
+func (c *Client) processUpdate(update *tgbotapi.Update) error {
 	if update.CallbackQuery != nil {
 		log.Printf(
 			"username: %s, id: %d, text: %s",
