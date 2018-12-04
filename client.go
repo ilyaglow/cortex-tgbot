@@ -18,11 +18,6 @@ import (
 )
 
 const (
-	// defaultTLP is Green because indicators reaching telegram servers.
-	// Same for defaultPAP
-	// TODO: think about making it configurable
-	defaultTLP           = 1
-	defaultPAP           = 1
 	boltFileName         = "bolt.db"
 	bucket               = "users"
 	tgTokenEnvName       = "TGBOT_API_TOKEN"
@@ -35,6 +30,12 @@ const (
 )
 
 var (
+	// defaultTLP is Green because indicators reach telegram servers.
+	// Same for defaultPAP.
+	// TODO: think about making it configurable.
+	defaultTLP = cortex.TLPGreen
+	defaultPAP = cortex.PAPGreen
+
 	pollTimeout   = 20 * time.Second
 	cortexTimeout = 5 * time.Minute
 
