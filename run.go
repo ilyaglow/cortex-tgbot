@@ -26,7 +26,7 @@ func (c *Client) Run() {
 
 	for update := range updates {
 		go func(upd *tgbotapi.Update) {
-			if err := c.process(upd); err != nil {
+			if err := c.processUpdate(upd); err != nil {
 				log.Println(err)
 			}
 		}(&update)
