@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -81,14 +82,19 @@ func (c *Client) log(v ...interface{}) {
 	}
 }
 
-// socks5Client bootstraps http.Client that uses socks5 proxy
-func socks5Client(u *url.URL) (*http.Client, error) {
-	dialer, err := proxy.FromURL(u, proxy.Direct)
-	if err != nil {
-		return nil, err
+func httpClient() *http.Client {
+	return &http.Client{
+		Timeout: time.Second * 10,
+		Transport: &http.Transport{
+			MaxIdleConns:        200,
+			MaxIdleConnsPerHost: 100,
+			MaxConnsPerHost:     100,
+			Dial: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 5 * time.Second,
+		},
 	}
-
-	return &http.Client{Transport: &http.Transport{Dial: dialer.Dial}}, nil
 }
 
 // NewClient bootstraps the Client struct from env variables
@@ -102,26 +108,23 @@ func NewClient() *Client {
 		usage()
 	}
 
+	hc := httpClient()
 	if socksURLEnvValue != "" {
-		surl, err := url.Parse(socksURLEnvValue)
+		u, err := url.Parse(socksURLEnvValue)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		sc, err := socks5Client(surl)
+		dialer, err := proxy.FromURL(u, proxy.Direct)
 		if err != nil {
 			log.Fatal(err)
 		}
+		hc.Transport.(*http.Transport).Dial = dialer.Dial
+	}
 
-		bot, err = tgbotapi.NewBotAPIWithClient(tgTokenEnvValue, sc)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		bot, err = tgbotapi.NewBotAPI(tgTokenEnvValue)
-		if err != nil {
-			log.Fatal(err)
-		}
+	bot, err = tgbotapi.NewBotAPIWithClient(tgTokenEnvValue, hc)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	crtx, err := cortex.NewClient(cortexURLEnvValue, &cortex.ClientOpts{
