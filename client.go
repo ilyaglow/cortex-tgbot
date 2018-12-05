@@ -84,7 +84,7 @@ func (c *Client) log(v ...interface{}) {
 
 func httpClient() *http.Client {
 	return &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: 1 * time.Minute,
 		Transport: &http.Transport{
 			MaxIdleConns:        200,
 			MaxIdleConnsPerHost: 100,
