@@ -1,8 +1,6 @@
 language: go
 
 go:
-  - 1.9
-  - "1.10"
   - master
 
 addons:
@@ -31,4 +29,3 @@ deploy:
   script: curl -sL https://git.io/goreleaser | bash
   on:
     tags: true
-    condition: $TRAVIS_GO_VERSION = "1.10"
