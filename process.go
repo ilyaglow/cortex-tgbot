@@ -11,7 +11,7 @@ import (
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/ilyaglow/go-cortex"
+	cortex "github.com/ilyaglow/go-cortex/v2"
 )
 
 // sendReport sends a report depends on success
@@ -37,6 +37,9 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 }
 
 func (c *Client) processUpdate(update *tgbotapi.Update) error {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	msg.ReplyToMessageID = update.Message.MessageID
+
 	if update.CallbackQuery != nil {
 		log.Printf(
 			"username: %s, id: %d, text: %s",
@@ -44,6 +47,13 @@ func (c *Client) processUpdate(update *tgbotapi.Update) error {
 			update.CallbackQuery.Message.From.ID,
 			update.CallbackQuery.Message.Text,
 		)
+
+		if !c.CheckAuth(update.CallbackQuery.Message.From) {
+			msg.Text = "Non-authorized action, type /start to login"
+			_, err := c.Bot.Send(msg)
+			return err
+		}
+
 		if err := c.processCallback(update.CallbackQuery); err != nil {
 			return err
 		}
@@ -58,9 +68,6 @@ func (c *Client) processUpdate(update *tgbotapi.Update) error {
 		update.Message.From.UserName,
 		update.Message.Text,
 	)
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	msg.ReplyToMessageID = update.Message.MessageID
-
 	if update.Message.IsCommand() &&
 		update.Message.Command() == "start" &&
 		!c.CheckAuth(update.Message.From) {
