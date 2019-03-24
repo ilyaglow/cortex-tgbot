@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	valid "github.com/asaskevich/govalidator"
@@ -14,8 +15,40 @@ import (
 	cortex "github.com/ilyaglow/go-cortex/v2"
 )
 
+type updateMeta struct {
+	from   *tgbotapi.User
+	chatID int64
+	msgID  int
+	data   string
+	typ    string
+}
+
+func newUpdateMeta(update *tgbotapi.Update) (*updateMeta, error) {
+	if update.CallbackQuery != nil {
+		return &updateMeta{
+			from:   update.CallbackQuery.From,
+			chatID: update.CallbackQuery.Message.Chat.ID,
+			msgID:  update.CallbackQuery.Message.MessageID,
+			data:   update.CallbackQuery.Data,
+			typ:    "callback",
+		}, nil
+	}
+
+	if update.Message != nil {
+		return &updateMeta{
+			from:   update.Message.From,
+			chatID: update.Message.Chat.ID,
+			msgID:  update.Message.MessageID,
+			data:   update.Message.Text,
+			typ:    "message",
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unknown update type: %v", update)
+}
+
 // sendReport sends a report depends on success
-func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) error {
+func (c *Cortexbot) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) error {
 	if r.Status == "Failure" {
 		return fmt.Errorf("Analyzer %s failed with error message: %s", r.AnalyzerName, r.ReportBody.ErrorMessage)
 	}
@@ -36,24 +69,110 @@ func (c *Client) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) 
 	return err
 }
 
-func (c *Client) processUpdate(update *tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-	msg.ReplyToMessageID = update.Message.MessageID
+func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
+	meta, err := newUpdateMeta(update)
+	if err != nil {
+		return err
+	}
 
-	if update.CallbackQuery != nil {
-		log.Printf(
-			"username: %s, id: %d, text: %s",
-			update.CallbackQuery.Message.From.UserName,
-			update.CallbackQuery.Message.From.ID,
-			update.CallbackQuery.Message.Text,
-		)
+	log.Printf(
+		"%s: [%s] %s",
+		meta.typ,
+		meta.from.UserName,
+		meta.data,
+	)
 
-		if !c.CheckAuth(update.CallbackQuery.Message.From) {
-			msg.Text = "Non-authorized action, type /start to login"
+	msg := tgbotapi.NewMessage(meta.chatID, "")
+	msg.ReplyToMessageID = meta.msgID
+
+	isCmd := update.Message != nil && update.Message.IsCommand()
+	var cmd string
+	if isCmd {
+		cmd = update.Message.Command()
+	}
+
+	if isCmd && cmd == "login" && c.noAdmin() {
+		if update.Message.CommandArguments() != c.Password {
+			msg.Text = "Wrong password"
+			_, err = c.Bot.Send(msg)
+			return err
+		}
+
+		u := &User{
+			ID:    meta.from.ID,
+			Admin: 1,
+			About: meta.from.String(),
+		}
+		err = c.addUser(u)
+		if err != nil {
+			msg.Text = fmt.Sprintf("Can't register: %s", err.Error())
+			_, err = c.Bot.Send(msg)
+			return err
+		}
+		log.Printf("Registered new user %d", meta.from.ID)
+		return nil
+	}
+
+	// user initiates interaction.
+	if isCmd && cmd == "start" {
+		if c.noAdmin() {
+			msg.Text = "No admin assigned. Try /login password"
+			_, err = c.Bot.Send(msg)
+			return err
+		}
+
+		if c.CheckAuth(meta.from) {
+			msg.Text = "Already logged in, you can send indicators here"
 			_, err := c.Bot.Send(msg)
 			return err
 		}
 
+		msg.Text = "Forward the next message to the bot admin"
+		_, err := c.Bot.Send(msg)
+		if err != nil {
+			return err
+		}
+		msg = tgbotapi.NewMessage(meta.chatID, "")
+		msg.Text = fmt.Sprintf("/approve %d %s", meta.from.ID, meta.from.String())
+		_, err = c.Bot.Send(msg)
+		return err
+	}
+
+	if c.CheckAdmin(meta.from) && isCmd && cmd == "approve" {
+		parts := strings.SplitN(update.Message.Text, " ", 3)
+		if len(parts) < 3 {
+			msg.Text = fmt.Sprintf("Not enough parameters to approve: %s", update.Message.Text)
+			_, err = c.Bot.Send(msg)
+			return err
+		}
+		id, err := strconv.ParseInt(parts[1], 10, 32)
+		u := &User{
+			ID:    int(id),
+			Admin: 0,
+			About: parts[2],
+		}
+		err = c.addUser(u)
+		if err != nil {
+			msg.Text = fmt.Sprintf("can't create user: %s", err.Error())
+			_, err = c.Bot.Send(msg)
+			if err != nil {
+				return err
+			}
+		}
+		msg.Text = "Successfully approved"
+		_, err = c.Bot.Send(msg)
+		return err
+	}
+
+	// auth guard
+	if !c.CheckAuth(meta.from) {
+		msg.Text = "Non-authorized action, type /start to login"
+		_, err := c.Bot.Send(msg)
+		return err
+	}
+
+	switch meta.typ {
+	case "callback":
 		if err := c.processCallback(update.CallbackQuery); err != nil {
 			return err
 		}
@@ -61,33 +180,15 @@ func (c *Client) processUpdate(update *tgbotapi.Update) error {
 		cbcfg := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
 		_, err := c.Bot.AnswerCallbackQuery(cbcfg)
 		return err
+	case "message":
+		return c.processMessage(update.Message)
 	}
 
-	log.Printf(
-		"[%s] %s",
-		update.Message.From.UserName,
-		update.Message.Text,
-	)
-	if update.Message.IsCommand() &&
-		update.Message.Command() == "start" &&
-		!c.CheckAuth(update.Message.From) {
-
-		msg.Text = "Enter your password"
-		_, err := c.Bot.Send(msg)
-		return err
-	}
-
-	if c.CheckAuth(update.Message.From) {
-		err := c.processMessage(update.Message)
-		return err
-	}
-
-	err := c.Auth(update.Message)
-	return err
+	return nil
 }
 
 // processCallback analyzes observables with a selected set of analyzers
-func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
+func (c *Cortexbot) processCallback(callback *tgbotapi.CallbackQuery) error {
 	var j cortex.Observable
 	var err error
 
@@ -157,7 +258,7 @@ func (c *Client) processCallback(callback *tgbotapi.CallbackQuery) error {
 }
 
 // analyzersButtons returns a markup of analyzers as buttons
-func (c *Client) analyzersButtons(datatype string) (*tgbotapi.InlineKeyboardMarkup, error) {
+func (c *Cortexbot) analyzersButtons(datatype string) (*tgbotapi.InlineKeyboardMarkup, error) {
 	analyzers, _, err := c.Cortex.Analyzers.ListByType(context.Background(), datatype)
 	if err != nil {
 		return nil, err
@@ -201,7 +302,7 @@ func showButton() *tgbotapi.InlineKeyboardMarkup {
 }
 
 // processMessage asks Cortex about data submitted by a user
-func (c *Client) processMessage(input *tgbotapi.Message) error {
+func (c *Cortexbot) processMessage(input *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(input.Chat.ID, "Select analyzer to run. Choose <All> to run all of them.")
 	msg.ReplyToMessageID = input.MessageID
 
@@ -239,7 +340,7 @@ func buildTaxonomies(txs []cortex.Taxonomy) string {
 }
 
 // newArtifact makes an Artifact depends on its type
-func newArtifact(s string, tlp, pap int) cortex.Observable {
+func newArtifact(s string, tlp cortex.TLP, pap cortex.PAP) cortex.Observable {
 	return &cortex.Task{
 		Data:     s,
 		DataType: dataType(s),
@@ -267,7 +368,7 @@ func dataType(d string) (t string) {
 }
 
 // newFileArtifactFromURL makes a FileArtifact from URL
-func newFileArtifactFromURL(link, fname string, tlp, pap int, client *http.Client) (cortex.Observable, error) {
+func newFileArtifactFromURL(link, fname string, tlp cortex.TLP, pap cortex.PAP, client *http.Client) (cortex.Observable, error) {
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		return nil, err

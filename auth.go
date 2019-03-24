@@ -2,23 +2,25 @@ package cortexbot
 
 import (
 	"log"
-	"strconv"
-	"strings"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 // Auth handles simple password authentication of a user
-func (c *Client) Auth(input *tgbotapi.Message) error {
+func (c *Cortexbot) Auth(input *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(input.Chat.ID, "")
 	msg.ReplyToMessageID = input.MessageID
 	if input.Text == c.Password {
-		err := c.registerUser(input.From)
+		u := &User{
+			ID:    input.From.ID,
+			Admin: 1,
+			About: input.From.String(),
+		}
+		err := c.addUser(u)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("Allowed users: %s", strings.Join(c.listUsers(), ","))
 		msg.Text = "Successfully authenticated"
 	} else {
 		msg.Text = "Wrong password"
@@ -30,9 +32,26 @@ func (c *Client) Auth(input *tgbotapi.Message) error {
 	return nil
 }
 
-// CheckAuth checks if user is allowed to interact with a bot
-func (c *Client) CheckAuth(u *tgbotapi.User) bool {
-	if c.userExists(strconv.Itoa(u.ID)) {
+// CheckAuth checks if user is allowed to interact with a bot.
+func (c *Cortexbot) CheckAuth(u *tgbotapi.User) bool {
+	user, err := c.getUser(u.ID)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if user != nil {
+		return true
+	}
+	return false
+}
+
+// CheckAdmin checks if user is an admin.
+func (c *Cortexbot) CheckAdmin(u *tgbotapi.User) bool {
+	user, err := c.getUser(u.ID)
+	if err != nil {
+		return false
+	}
+	if user.Admin == 1 {
 		return true
 	}
 	return false

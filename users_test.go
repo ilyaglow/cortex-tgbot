@@ -1,35 +1,27 @@
 package cortexbot
 
 import (
-	"errors"
+	"database/sql"
 	"log"
 	"os"
-	"strconv"
 	"testing"
-
-	"github.com/boltdb/bolt"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func mockupClient() *Client {
-	db, err := bolt.Open("test.db", 0644, nil)
+func mockupClient() *Cortexbot {
+	db, err := sql.Open("sqlite3", "test.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Create a bucket
-	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte("test"))
-		if err != nil {
-			return errors.New("Create users bucket failed")
-		}
-		return nil
-	})
-
-	return &Client{
-		DB:          db,
-		UsersBucket: "test",
+	c := &Cortexbot{
+		DB: db,
 	}
+	err = c.createUsersTbl()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return c
 }
 
 func TestUser(t *testing.T) {
@@ -37,32 +29,44 @@ func TestUser(t *testing.T) {
 	defer os.Remove("test.db")
 
 	var usertests = []struct {
-		u  *tgbotapi.User
-		id string
+		u  *User
+		id int
 	}{
-		{&tgbotapi.User{
+		{&User{
 			ID: 10000,
-		}, strconv.Itoa(10000)},
-		{&tgbotapi.User{
+		}, 10000},
+		{&User{
 			ID: 20000,
-		}, strconv.Itoa(20000)},
+		}, 20000},
 	}
 
 	for _, ut := range usertests {
-		if err := c.registerUser(ut.u); err != nil {
+		if err := c.addUser(ut.u); err != nil {
 			t.Error(err)
 		}
 
-		if !c.userExists(ut.id) {
-			t.Errorf("%s is not found", ut.id)
+		user, err := c.getUser(ut.id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if user == nil {
+			t.Errorf("%d is not found", ut.id)
 		}
 	}
 
-	if len(c.listUsers()) != 2 {
-		t.Error("There are not 2 users in a bucket as supposed to be")
+	users, err := c.listUsers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(users) != 2 {
+		t.Error("there are not 2 users in a bucket as supposed to be")
 	}
 
-	if c.userExists("nonexistent") {
-		t.Error("Non-existent user exists")
+	nonexistent, err := c.getUser(0)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if nonexistent != nil {
+		t.Errorf("non-existent account exists")
 	}
 }

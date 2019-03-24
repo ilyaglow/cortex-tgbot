@@ -2,7 +2,6 @@ package cortexbot
 
 import (
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -13,29 +12,37 @@ func TestCheckAuth(t *testing.T) {
 	defer os.Remove("test.db")
 
 	var authtest = []struct {
-		u           *tgbotapi.User
-		checkString string
+		tgUser *tgbotapi.User
+		user   *User
 	}{
 		{
 			&tgbotapi.User{
 				ID:        1000,
 				FirstName: "Name",
 				UserName:  "user1",
-			}, strconv.Itoa(1000)},
+			},
+			&User{
+				ID: 1000,
+			},
+		},
 		{
 			&tgbotapi.User{
 				ID:        2000,
 				FirstName: "Name2",
-			}, strconv.Itoa(2000)},
+			},
+			&User{
+				ID: 2000,
+			},
+		},
 	}
 
 	for _, at := range authtest {
-		if err := c.registerUser(at.u); err != nil {
+		if err := c.addUser(at.user); err != nil {
 			t.Error(err)
 		}
 
-		if !c.CheckAuth(at.u) {
-			t.Errorf("check auth for %v failed", at.u)
+		if !c.CheckAuth(at.tgUser) {
+			t.Errorf("check auth for %v failed", at.tgUser)
 		}
 	}
 
