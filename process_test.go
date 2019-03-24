@@ -10,16 +10,17 @@ import (
 func TestObservableConstructor(t *testing.T) {
 	var cases = []struct {
 		data     string
-		tlp, pap int
+		tlp      cortex.TLP
+		pap      cortex.PAP
 		dataType string
 	}{
-		{"1.1.1.1", 0, 0, "ip"},
-		{"https://subdomain.domain.com/route/query?param=val", 1, 1, "url"},
-		{"subdomain.domain.com", 2, 2, "domain"},
-		{"email.address@domain.com", 3, 3, "mail"},
-		{"email+address@domain.com", 3, 3, "mail"},
-		{"a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", 0, 0, "hash"},
-		{"randomdata", 1, 1, "other"},
+		{"1.1.1.1", cortex.TLPWhite, cortex.PAPWhite, "ip"},
+		{"https://subdomain.domain.com/route/query?param=val", cortex.TLPGreen, cortex.PAPGreen, "url"},
+		{"subdomain.domain.com", cortex.TLPAmber, cortex.PAPAmber, "domain"},
+		{"email.address@domain.com", cortex.TLPRed, cortex.PAPRed, "mail"},
+		{"email+address@domain.com", cortex.TLPRed, cortex.PAPRed, "mail"},
+		{"a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", cortex.TLPWhite, cortex.PAPWhite, "hash"},
+		{"randomdata", cortex.TLPGreen, cortex.PAPGreen, "other"},
 	}
 
 	for _, c := range cases {
