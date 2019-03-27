@@ -2,16 +2,19 @@ FROM golang:alpine as build
 LABEL maintainer="contact@ilyaglotov.com" \
       repository="https://github.com/ilyaglow/cortex-tgbot"
 
-COPY cmd/cortexbot/main.go /go/src/cortexbot/main.go
+ENV GO111MODULE=on
+
+COPY . /go/src/cortexbot
 
 RUN apk --update --no-cache add ca-certificates \
                                 git \
   && cd /go/src/cortexbot/ \
-  && go get -t . \
+  && go mod download \
   && CGO_ENABLED=0 go build -ldflags="-s -w" \
                             -a \
                             -installsuffix static \
-                            -o /cortexbot
+                            -o /cortexbot \
+                            ./cmd/cortexbot
 
 FROM alpine:latest
 COPY --from=build /cortexbot /app/cortexbot
