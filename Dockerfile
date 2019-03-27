@@ -4,17 +4,19 @@ LABEL maintainer="contact@ilyaglotov.com" \
 
 ENV GO111MODULE=on
 
-COPY . /go/src/cortexbot
+COPY . /go/src/github.com/ilyaglow/cortex-tgbot/
 
 RUN apk --update --no-cache add ca-certificates \
                                 git \
-  && cd /go/src/cortexbot/ \
+                                sqlite \
+                                build-base \
+  && cd /go/src/github.com/ilyaglow/cortex-tgbot \
   && go mod download \
-  && CGO_ENABLED=0 go build -ldflags="-s -w" \
-                            -a \
-                            -installsuffix static \
-                            -o /cortexbot \
-                            ./cmd/cortexbot
+  && cd ./cmd/cortexbot \
+  && go build -ldflags="-s -w" \
+              -a \
+              -installsuffix static \
+              -o /cortexbot
 
 FROM alpine:latest
 COPY --from=build /cortexbot /app/cortexbot
