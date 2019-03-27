@@ -2,7 +2,7 @@ package cortexbot
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -100,7 +100,13 @@ func NewFromEnv() (*Cortexbot, error) {
 	)
 
 	if tgTokenEnvValue == "" || cortexURLEnvValue == "" || cortexAPIKeyEnvValue == "" || cortexBotPWEnvValue == "" {
-		return nil, errors.New("not enough parameters to run")
+		return nil, fmt.Errorf(
+			"not enough parameters: check that environment variables %s, %s, %s and %s are set",
+			tgTokenEnvName,
+			cortexURLEnvName,
+			cortexAPIKeyEnvName,
+			cortexBotPWEnvName,
+		)
 	}
 
 	if socksURLEnvValue != "" {
