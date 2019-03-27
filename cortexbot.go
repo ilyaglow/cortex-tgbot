@@ -140,7 +140,7 @@ func NewFromEnv() (*Cortexbot, error) {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite3", "cortexbot.db")
+	db, err := sql.Open("sqlite3", sqliteFileName)
 	if err != nil {
 		return nil, err
 	}
