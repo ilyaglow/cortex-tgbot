@@ -12,7 +12,7 @@ import (
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	cortex "github.com/ilyaglow/go-cortex/v2"
+	cortex "github.com/ilyaglow/go-cortex/v3"
 )
 
 type updateMeta struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ilyaglow/go-cortex"
+	cortex "github.com/ilyaglow/go-cortex/v3"
 )
 
 func TestObservableConstructor(t *testing.T) {

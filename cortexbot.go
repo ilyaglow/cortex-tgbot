@@ -13,7 +13,7 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/ilyaglow/go-cortex"
+	cortex "github.com/ilyaglow/go-cortex/v3"
 
 	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
