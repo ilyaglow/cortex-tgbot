@@ -1,8 +1,6 @@
 package cortexbot
 
 import (
-	"log"
-
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -34,15 +32,7 @@ func (c *Cortexbot) Auth(input *tgbotapi.Message) error {
 
 // CheckAuth checks if user is allowed to interact with a bot.
 func (c *Cortexbot) CheckAuth(u *tgbotapi.User) bool {
-	user, err := c.getUser(u.ID)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if user != nil {
-		return true
-	}
-	return false
+	return c.userExists(u.ID)
 }
 
 // CheckAdmin checks if user is an admin.
