@@ -1,6 +1,9 @@
 package cortexbot
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 // // registerUser adds a user to boltdb bucket.
 // func (c *Cortexbot) registerUser(u *tgbotapi.User) error {
@@ -103,9 +106,6 @@ func (c *Cortexbot) getUser(id int) (*User, error) {
 		FROM users
 		WHERE id=?
 	`, id).Scan(&user.ID, &user.Admin, &user.About)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
 
 	if err != nil {
 		return nil, err
@@ -209,7 +209,10 @@ func (c *Cortexbot) userExists(id int) bool {
 		FROM users
 		WHERE id=?
 	`, id)
-	if row.Scan() != nil {
+
+	var v int
+	if err := row.Scan(&v); err != nil {
+		log.Println(err)
 		return false
 	}
 

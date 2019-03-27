@@ -63,7 +63,7 @@ func TestUser(t *testing.T) {
 	}
 
 	nonexistent, err := c.getUser(0)
-	if err != nil {
+	if err != sql.ErrNoRows {
 		log.Fatal(err)
 	}
 	if nonexistent != nil {
