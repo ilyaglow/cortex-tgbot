@@ -76,9 +76,10 @@ func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
 	}
 
 	log.Printf(
-		"%s: [%s] %s",
+		"%s: [%s:%d] %s",
 		meta.typ,
 		meta.from.UserName,
+		meta.from.ID,
 		meta.data,
 	)
 
@@ -91,7 +92,7 @@ func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
 		cmd = update.Message.Command()
 	}
 
-	if isCmd && cmd == "login" && c.noAdmin() {
+	if cmd == "login" && c.noAdmin() {
 		if update.Message.CommandArguments() != c.Password {
 			msg.Text = "Wrong password"
 			_, err = c.Bot.Send(msg)
@@ -110,11 +111,14 @@ func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
 			return err
 		}
 		log.Printf("Registered new user %d", meta.from.ID)
-		return nil
+
+		msg.Text = "Success"
+		_, err = c.Bot.Send(msg)
+		return err
 	}
 
 	// user initiates interaction.
-	if isCmd && cmd == "start" {
+	if cmd == "start" {
 		if c.noAdmin() {
 			msg.Text = "No admin assigned. Try /login password"
 			_, err = c.Bot.Send(msg)
@@ -122,7 +126,7 @@ func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
 		}
 
 		if c.CheckAuth(meta.from) {
-			msg.Text = "Already logged in, you can send indicators here"
+			msg.Text = "Already logged in, you can send indicators"
 			_, err := c.Bot.Send(msg)
 			return err
 		}
@@ -138,7 +142,7 @@ func (c *Cortexbot) processUpdate(update *tgbotapi.Update) error {
 		return err
 	}
 
-	if c.CheckAdmin(meta.from) && isCmd && cmd == "approve" {
+	if c.CheckAdmin(meta.from) && cmd == "approve" {
 		parts := strings.SplitN(update.Message.Text, " ", 3)
 		if len(parts) < 3 {
 			msg.Text = fmt.Sprintf("Not enough parameters to approve: %s", update.Message.Text)
