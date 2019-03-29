@@ -2,7 +2,7 @@ project_name: cortexbot
 builds:
 - env:
   - CGO_ENABLED=0
-  main: ./cmd/cortexbot/main.go
+  main: ./cmd/cortexbot/cortexbot.go
   goos:
     - windows
     - darwin
