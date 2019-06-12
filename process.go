@@ -50,7 +50,11 @@ func newUpdateMeta(update *tgbotapi.Update) (*updateMeta, error) {
 // sendReport sends a report depends on success
 func (c *Cortexbot) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuery) error {
 	if r.Status == "Failure" {
-		return fmt.Errorf("Analyzer %s failed with error message: %s", r.AnalyzerName, r.ReportBody.ErrorMessage)
+		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf("Analyzer %s failed on %s: %s", r.AnalyzerName, r.Data, r.ReportBody.ErrorMessage))
+		msg.ReplyToMessageID = callback.Message.MessageID
+		if _, err := c.Bot.Send(msg); err != nil {
+			return err
+		}
 	}
 
 	// Send JSON file with full report and taxonomies
