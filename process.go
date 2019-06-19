@@ -61,7 +61,7 @@ func (c *Cortexbot) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuer
 	tr, _ := json.MarshalIndent(r, "", "  ")
 
 	fb := tgbotapi.FileBytes{
-		Name:  fmt.Sprintf("%s-%s.json", r.AnalyzerName, r.ID),
+		Name:  fmt.Sprintf("%s-%s.log", r.AnalyzerName, r.ID),
 		Bytes: tr,
 	}
 
