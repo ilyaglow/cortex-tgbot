@@ -52,9 +52,9 @@ func (c *Cortexbot) sendReport(r *cortex.Report, callback *tgbotapi.CallbackQuer
 	if r.Status == "Failure" {
 		msg := tgbotapi.NewMessage(callback.Message.Chat.ID, fmt.Sprintf("Analyzer %s failed on %s: %s", r.AnalyzerName, r.Data, r.ReportBody.ErrorMessage))
 		msg.ReplyToMessageID = callback.Message.MessageID
-		if _, err := c.Bot.Send(msg); err != nil {
-			return err
-		}
+		_, err := c.Bot.Send(msg)
+
+		return err
 	}
 
 	// Send JSON file with full report and taxonomies
