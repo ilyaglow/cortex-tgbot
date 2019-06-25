@@ -79,7 +79,10 @@ func socks5Client(u *url.URL) (*http.Client, error) {
 		return nil, err
 	}
 
-	return &http.Client{Transport: &http.Transport{Dial: dialer.Dial}}, nil
+	return &http.Client{
+		Transport: &http.Transport{Dial: dialer.Dial},
+		Timeout:   time.Second * 30,
+	}, nil
 }
 
 // NewClient bootstraps the Client struct from env variables.
