@@ -26,7 +26,7 @@ func main() {
 			APIKey: os.Getenv("CORTEX_API_KEY"),
 		},
 		HTTPClient: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * 600,
 			Transport: &http.Transport{
 				Dial: (&net.Dialer{
 					Timeout: 5 * time.Second,
