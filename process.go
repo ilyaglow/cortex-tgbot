@@ -239,7 +239,14 @@ func (c *Cortexbot) processCallback(callback *tgbotapi.CallbackQuery) error {
 			return err
 		}
 	case "show":
-		kb, err := c.analyzersButtons(dataType(callback.Message.ReplyToMessage.Text))
+		var kind string
+		if callback.Message.ReplyToMessage.Document != nil {
+			kind = "file"
+		} else {
+			kind = dataType(callback.Message.ReplyToMessage.Text)
+		}
+
+		kb, err := c.analyzersButtons(kind)
 		if err != nil {
 			return err
 		}
