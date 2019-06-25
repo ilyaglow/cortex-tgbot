@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/ilyaglow/cortex-tgbot"
-	cortex "github.com/ilyaglow/go-cortex"
+	cortex "github.com/ilyaglow/go-cortex/v3"
 )
 
 func main() {
